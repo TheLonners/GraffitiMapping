@@ -1,0 +1,57 @@
+Qué hace este sistema
+
+Este sistema permite trabajar así:
+
+PC: muestra la salida visual final
+Tablet o celular: sirve como control para dibujar
+OBS: captura la salida del PC
+Proyector: proyecta esa salida sobre el carro o superficie
+
+Qué necesitas antes de empezar
+
+Necesitas esto:
+
+1 computador
+1 tablet o celular
+ambos conectados a la misma red Wi-Fi
+el archivo HTML corregido:
+index.html
+Python instalado en el computador del host
+un navegador en ambos dispositivos
+
+Abrir el servidor local en el computador  en la carpeta guardada, en la ruta escribir cmd
+
+Paso A
+
+Abre el servidor con Python
+
+python -m http.server 8080
+Paso B
+
+Abre en el PC:
+
+http://TU-IP:8080/car_projection_control_fixed.html?mode=projection&room=demo1
+Paso C
+
+Abre en la tablet:
+
+http://TU-IP:8080/car_projection_control_fixed.html?mode=control&room=demo1
+Paso D
+
+Revisa que ambos digan Conectado
+
+Paso E
+
+Carga la imagen desde la tablet
+
+Paso F
+
+Haz pruebas de dibujo
+
+Paso G
+
+Activa fullscreen en el PC
+
+Paso H
+
+Captura esa ventana con OBS
