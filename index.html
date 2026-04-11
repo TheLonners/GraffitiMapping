@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Car Projection Control</title>
+  <style>
+    :root {
+      --bg: #06070b;
+      --panel: rgba(18, 20, 28, 0.92);
+      --panel-2: rgba(24, 27, 37, 0.92);
+      --line: rgba(255,255,255,0.08);
+      --text: #f2f5ff;
+      --muted: #9aa3b2;
+      --accent: #72f2ff;
+      --accent-2: #9a7cff;
+      --danger: #ff6584;
+      --ok: #51d68a;
+      --shadow: 0 20px 60px rgba(0,0,0,0.45);
+      --radius: 20px;
+      --btn-h: 52px;
+      --toolbar-w: 360px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+      overflow: hidden; background: radial-gradient(circle at top, #0d1020 0%, #06070b 55%, #040509 100%);
+      color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif;
+      touch-action: none;
+    }
+
+    body.projection-mode {
+      background: #000;
+      cursor: none;
+    }
+
+    #app {
+      position: relative; width: 100%; height: 100%; overflow: hidden;
+    }
+
+    .stage-wrap {
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      background: radial-gradient(circle at center, rgba(24, 29, 48, 0.25), rgba(0,0,0,0.7));
+    }
+
+    canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+    }
+
+    #projectionCanvas, #baseCanvas, #drawCanvas, #fxCanvas {
+      image-rendering: auto;
+      touch-action: none;
+    }
+
+    /* CORRECCIÓN 1: Dejar que los toques atraviesen las capas base y fx para llegar al drawCanvas */
+    #fxCanvas, #baseCanvas {
+      pointer-events: none;
+    }
+
+    .hud {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .pill {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(8, 10, 16, 0.75);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px; height: 10px; border-radius: 999px; background: var(--muted);
+      box-shadow: 0 0 12px currentColor;
+    }
+    .dot.connected { color: var(--ok); background: var(--ok); }
+    .dot.connecting { color: #ffd166; background: #ffd166; }
+    .dot.disconnected { color: var(--danger); background: var(--danger); }
+
+    .shell {
+      position: absolute; inset: 0; display: flex; z-index: 8; pointer-events: none;
+    }
+
+    .toolbar {
+      width: min(var(--toolbar-w), calc(100vw - 24px));
+      margin: 84px 0 16px 16px;
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      display: flex; flex-direction: column; overflow: hidden;
+      pointer-events: auto;
+      transition: transform 220ms ease, opacity 220ms ease;
+    }
+
+    .toolbar.hidden {
+      transform: translateX(calc(-100% - 24px));
+      opacity: 0.06;
+    }
+
+    .toolbar-header {
+      padding: 18px 18px 12px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .brand h1 {
+      margin: 0; font-size: 16px; font-weight: 700; letter-spacing: 0.01em;
+    }
+    .brand p {
+      margin: 0; color: var(--muted); font-size: 12px;
+    }
+
+    .toolbar-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      overflow: auto;
+      max-height: calc(100vh - 132px);
+    }
+
+    .group {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,0.02);
+      display: grid;
+      gap: 10px;
+    }
+
+    .group-title {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button, .button, input, select {
+      font: inherit;
+    }
+
+    button, .button {
+      height: var(--btn-h);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      color: var(--text);
+      border-radius: 16px;
+      padding: 0 14px;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    button:hover { border-color: rgba(255,255,255,0.18); }
+    button:active { transform: translateY(1px) scale(0.995); }
+    button.active {
+      background: linear-gradient(180deg, rgba(114,242,255,0.18), rgba(154,124,255,0.12));
+      border-color: rgba(114,242,255,0.4);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 0 30px rgba(114,242,255,0.08);
+    }
+    button.danger { border-color: rgba(255,101,132,0.28); }
+
+    label {
+      font-size: 12px; color: var(--muted);
+      display: grid; gap: 6px;
+    }
+
+    .value-line {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      font-size: 12px; color: var(--muted);
+    }
+
+    input[type="range"] {
+      width: 100%; accent-color: #89efff;
+    }
+
+    input[type="color"] {
+      width: 100%; height: var(--btn-h);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      background: transparent;
+      padding: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%; height: var(--btn-h);
+      border-radius: 16px;
+      background: rgba(0,0,0,0.24);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 0 14px;
+      outline: none;
+    }
+
+    .chips {
+      display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;
+    }
+
+    .chip {
+      height: 36px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); cursor: pointer;
+    }
+
+    .footer-fab {
+      position: absolute; left: 16px; bottom: 16px; z-index: 11; display: flex; gap: 10px;
+    }
+
+    .mini {
+      width: 52px; height: 52px; border-radius: 999px;
+      background: rgba(8,10,16,0.8); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow);
+      display: grid; place-items: center; pointer-events: auto;
+    }
+
+    .projection-ui {
+      position: absolute; right: 16px; bottom: 16px; z-index: 12; display: flex; gap: 10px;
+      opacity: 0.92;
+    }
+
+    .hidden-in-projection {
+      display: none !important;
+    }
+
+    .mode-label {
+      font-weight: 700; letter-spacing: 0.03em; color: var(--accent);
+    }
+
+    .hint {
+      color: var(--muted); font-size: 12px; line-height: 1.45;
+    }
+
+    .crosshair {
+      position: absolute; width: 14px; height: 14px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: 0 0 20px rgba(114,242,255,0.4);
+      pointer-events: none;
+      z-index: 7;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .toolbar {
+        width: calc(100vw - 24px);
+        margin-right: 12px;
+      }
+      .row, .row-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="stage-wrap">
+      <canvas id="baseCanvas"></canvas>
+      <canvas id="drawCanvas"></canvas>
+      <canvas id="fxCanvas"></canvas>
+      <div id="crosshair" class="crosshair"></div>
+    </div>
+
+    <div class="hud" id="hud">
+      <div class="pill"><span class="mode-label" id="modeLabel">CONTROL MODE</span><span id="roomReadout">Sala: —</span></div>
+      <div class="pill"><span class="dot disconnected" id="statusDot"></span><span id="statusText">Sin conexión</span></div>
+    </div>
+
+    <div class="shell" id="controlShell">
+      <aside class="toolbar" id="toolbar">
+        <div class="toolbar-header">
+          <div class="brand">
+            <h1>Car Projection Studio</h1>
+            <p>Tablet como control • proyector como lienzo</p>
+          </div>
+          <button id="toggleToolbarBtn" title="Ocultar panel">✦</button>
+        </div>
+
+        <div class="toolbar-body">
+          <section class="group">
+            <div class="group-title"><span>Sesión</span><span id="peerRoleLabel">Control</span></div>
+            <label>
+              Room ID
+              <input type="text" id="roomInput" placeholder="ej. demo-car-01" />
+            </label>
+            <div class="row">
+              <button id="connectBtn">Conectar</button>
+              <button id="copyControlLinkBtn">Copiar link tablet</button>
+            </div>
+            <div class="row">
+              <button id="copyProjectionLinkBtn">Copiar link proyección</button>
+              <button id="fullscreenBtn">Pantalla completa</button>
+            </div>
+            <div class="hint">Abre este archivo en ambos dispositivos. En la tablet usa <strong>?mode=control</strong> y en el computador <strong>?mode=projection</strong> con el mismo room.</div>
+          </section>
+
+          <section class="group">
+            <div class="group-title"><span>Herramientas</span><span id="toolReadout">brush</span></div>
+            <div class="row-3">
+              <button class="tool-btn active" data-tool="brush">Brush</button>
+              <button class="tool-btn" data-tool="neon">Neon</button>
+              <button class="tool-btn" data-tool="spray">Spray</button>
+              <button class="tool-btn" data-tool="ribbon">Ribbon</button>
+              <button class="tool-btn" data-tool="eraser">Borrador</button>
+              <button id="spotlightBtn">Spotlight</button>
+            </div>
+          </section>
+
+          <section class="group">
+            <div class="group-title"><span>Color y trazo</span><span id="colorHexLabel">#72f2ff</span></div>
+            <input type="color" id="colorInput" value="#72f2ff" />
+            <div class="chips" id="paletteChips"></div>
+            <label>
+              <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
+              <input type="range" id="sizeInput" min="1" max="80" step="1" value="12" />
+            </label>
+            <label>
+              <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
+              <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
+            </label>
+            <label>
+              <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
+              <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
+            </label>
+          </section>
+
+          <section class="group">
+            <div class="group-title"><span>Capas</span><span>Base + dibujo + FX</span></div>
+            <div class="row">
+              <button id="loadImageBtn">Cargar carro</button>
+              <button id="fitImageBtn">Ajustar imagen</button>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" class="hidden-in-projection" style="display:none" />
+            <div class="row">
+              <button id="clearBtn" class="danger">Limpiar dibujo</button>
+              <button id="clearFxBtn">Limpiar FX</button>
+            </div>
+            <div class="row">
+              <button id="undoBtn">Deshacer</button>
+              <button id="redoBtn">Rehacer</button>
+            </div>
+          </section>
+
+          <section class="group">
+            <div class="group-title"><span>Show</span><span>Salida limpia</span></div>
+            <div class="row">
+              <button id="toggleHudBtn">Ocultar HUD</button>
+              <button id="blackBgBtn">Fondo negro</button>
+            </div>
+            <div class="hint">En el computador deja solo Projection Mode a pantalla completa y captura esa ventana en OBS.</div>
+          </section>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer-fab" id="fabBar">
+      <button class="mini" id="quickHideBtn" title="Mostrar/ocultar panel">☰</button>
+      <button class="mini" id="quickFullscreenBtn" title="Pantalla completa">⤢</button>
+    </div>
+
+    <div class="projection-ui" id="projectionUi">
+      <button id="projectionFullscreenBtn">Fullscreen</button>
+      <button id="projectionHudBtn">HUD</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script>
+    (() => {
+      const qs = new URLSearchParams(location.search);
+      const mode = (qs.get('mode') || 'control').toLowerCase();
+      const initialRoom = qs.get('room') || '';
+      const isProjection = mode === 'projection';
+      document.body.classList.toggle('projection-mode', isProjection);
+
+      const baseCanvas = document.getElementById('baseCanvas');
+      const drawCanvas = document.getElementById('drawCanvas');
+      const fxCanvas = document.getElementById('fxCanvas');
+      const baseCtx = baseCanvas.getContext('2d');
+      const drawCtx = drawCanvas.getContext('2d');
+      const fxCtx = fxCanvas.getContext('2d');
+      const crosshair = document.getElementById('crosshair');
+
+      const roomInput = document.getElementById('roomInput');
+      const connectBtn = document.getElementById('connectBtn');
+      const copyControlLinkBtn = document.getElementById('copyControlLinkBtn');
+      const copyProjectionLinkBtn = document.getElementById('copyProjectionLinkBtn');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const projectionFullscreenBtn = document.getElementById('projectionFullscreenBtn');
+      const projectionHudBtn = document.getElementById('projectionHudBtn');
+      const toggleToolbarBtn = document.getElementById('toggleToolbarBtn');
+      const toolbar = document.getElementById('toolbar');
+      const quickHideBtn = document.getElementById('quickHideBtn');
+      const quickFullscreenBtn = document.getElementById('quickFullscreenBtn');
+      const modeLabel = document.getElementById('modeLabel');
+      const peerRoleLabel = document.getElementById('peerRoleLabel');
+      const roomReadout = document.getElementById('roomReadout');
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const toolReadout = document.getElementById('toolReadout');
+      const colorInput = document.getElementById('colorInput');
+      const colorHexLabel = document.getElementById('colorHexLabel');
+      const sizeInput = document.getElementById('sizeInput');
+      const alphaInput = document.getElementById('alphaInput');
+      const glowInput = document.getElementById('glowInput');
+      const sizeValue = document.getElementById('sizeValue');
+      const alphaValue = document.getElementById('alphaValue');
+      const glowValue = document.getElementById('glowValue');
+      const loadImageBtn = document.getElementById('loadImageBtn');
+      const fitImageBtn = document.getElementById('fitImageBtn');
+      const imageInput = document.getElementById('imageInput');
+      const clearBtn = document.getElementById('clearBtn');
+      const clearFxBtn = document.getElementById('clearFxBtn');
+      const undoBtn = document.getElementById('undoBtn');
+      const redoBtn = document.getElementById('redoBtn');
+      const paletteChips = document.getElementById('paletteChips');
+      const controlShell = document.getElementById('controlShell');
+      const fabBar = document.getElementById('fabBar');
+      const projectionUi = document.getElementById('projectionUi');
+      const toggleHudBtn = document.getElementById('toggleHudBtn');
+      const blackBgBtn = document.getElementById('blackBgBtn');
+      const hud = document.getElementById('hud');
+      const spotlightBtn = document.getElementById('spotlightBtn');
+
+      const palette = ['#72f2ff', '#ffffff', '#ff4d8d', '#9a7cff', '#2dfc98', '#ffd166', '#ff7b00', '#00e5ff', '#f4f4f4', '#e91e63'];
+      palette.forEach(color => {
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.style.background = color;
+        chip.title = color;
+        chip.addEventListener('click', () => {
+          state.color = color;
+          syncUiFromState();
+          broadcastState(); // No enviamos imagen
+        });
+        paletteChips.appendChild(chip);
+      });
+
+      modeLabel.textContent = isProjection ? 'PROJECTION MODE' : 'CONTROL MODE';
+      peerRoleLabel.textContent = isProjection ? 'Projection' : 'Control';
+      roomInput.value = initialRoom;
+      if (isProjection) {
+        controlShell.classList.add('hidden-in-projection');
+        fabBar.classList.add('hidden-in-projection');
+      } else {
+        projectionUi.classList.add('hidden-in-projection');
+      }
+
+      const state = {
+        roomId: initialRoom || '',
+        tool: 'brush',
+        color: '#72f2ff',
+        size: 12,
+        alpha: 1,
+        glow: 0.7,
+        blackBg: true,
+        spotlight: false,
+        baseImageData: null,
+        baseImageObject: null,
+        baseImageRect: null,
+        baseImageRectNorm: null,
+        history: [],
+        redo: [],
+        pointerDown: false,
+        activeStroke: null,
+      };
+
+      let peer = null;
+      let conn = null;
+      let peerOpen = false;
+      let reconnectTimer = null;
+
+      function resizeCanvases() {
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        const w = Math.floor(window.innerWidth * dpr);
+        const h = Math.floor(window.innerHeight * dpr);
+        [baseCanvas, drawCanvas, fxCanvas].forEach(c => {
+          c.width = w; c.height = h;
+          c.style.width = window.innerWidth + 'px';
+          c.style.height = window.innerHeight + 'px';
+        });
+        renderAll();
+      }
+
+      function syncUiFromState() {
+        colorInput.value = state.color;
+        colorHexLabel.textContent = state.color.toUpperCase();
+        sizeInput.value = state.size;
+        alphaInput.value = state.alpha;
+        glowInput.value = state.glow;
+        sizeValue.textContent = state.size + ' px';
+        alphaValue.textContent = Number(state.alpha).toFixed(2);
+        glowValue.textContent = Number(state.glow).toFixed(2);
+        toolReadout.textContent = state.tool;
+        spotlightBtn.classList.toggle('active', state.spotlight);
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tool === state.tool));
+        roomReadout.textContent = 'Sala: ' + (state.roomId || '—');
+      }
+
+      function setStatus(kind, text) {
+        statusDot.className = 'dot ' + kind;
+        statusText.textContent = text;
+      }
+
+      function simpleToast(text) {
+        statusText.textContent = text;
+        clearTimeout(simpleToast._t);
+        simpleToast._t = setTimeout(() => {
+          if (conn && conn.open) setStatus('connected', 'Conectado');
+        }, 1600);
+      }
+
+      function peerIdForRoom(role, roomId) {
+        return 'carproj-' + roomId + '-' + role;
+      }
+
+      function makePeer(role, roomId) {
+        const id = peerIdForRoom(role, roomId);
+        return new Peer(id);
+      }
+
+      function initPeer() {
+        if (!state.roomId) return;
+        destroyPeer();
+        setStatus('connecting', 'Conectando…');
+        peer = makePeer(isProjection ? 'projection' : 'control', state.roomId);
+
+        peer.on('open', () => {
+          peerOpen = true;
+          if (isProjection) {
+            setStatus('connecting', 'Esperando tablet…');
+          } else {
+            tryConnectToProjection();
+          }
+        });
+
+        peer.on('connection', incoming => {
+          if (!isProjection) return;
+          attachConnection(incoming);
+        });
+
+        peer.on('error', err => {
+          console.warn('Peer error', err);
+          setStatus('disconnected', 'Error de conexión');
+        });
+
+        peer.on('disconnected', () => {
+          peerOpen = false;
+          setStatus('disconnected', 'Desconectado');
+        });
+      }
+
+      function tryConnectToProjection() {
+        if (!peer || !peerOpen) return;
+        const projectionId = peerIdForRoom('projection', state.roomId);
+        const outgoing = peer.connect(projectionId, { reliable: true });
+        attachConnection(outgoing);
+      }
+
+      function attachConnection(c) {
+        if (conn && conn.open) conn.close();
+        conn = c;
+        setStatus('connecting', isProjection ? 'Tablet conectando…' : 'Conectando a proyección…');
+
+        conn.on('open', () => {
+          setStatus('connected', 'Conectado');
+          // CORRECCIÓN 3: Enviar la imagen completa inicial solo cuando se conectan
+          broadcastState(true);
+          sendFullFrame();
+        });
+
+        conn.on('data', handleMessage);
+        conn.on('close', () => {
+          setStatus('disconnected', 'Conexión cerrada');
+          if (!isProjection) scheduleReconnect();
+        });
+        conn.on('error', () => {
+          setStatus('disconnected', 'Error de canal');
+          if (!isProjection) scheduleReconnect();
+        });
+      }
+
+      function destroyPeer() {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+        if (conn) { try { conn.close(); } catch (_) {} }
+        if (peer) { try { peer.destroy(); } catch (_) {} }
+        conn = null;
+        peer = null;
+        peerOpen = false;
+      }
+
+      function scheduleReconnect() {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(() => {
+          if (!isProjection && state.roomId) initPeer();
+        }, 1200);
+      }
+
+      function send(msg) {
+        if (conn && conn.open) conn.send(msg);
+      }
+
+      // CORRECCIÓN 2: Modificamos broadcastState para que el envío de imagen pesada sea opcional
+      function broadcastState(sendImage = false) {
+        const rectNorm = state.baseImageRect
+          ? {
+              x: state.baseImageRect.x / baseCanvas.width,
+              y: state.baseImageRect.y / baseCanvas.height,
+              w: state.baseImageRect.w / baseCanvas.width,
+              h: state.baseImageRect.h / baseCanvas.height,
+            }
+          : state.baseImageRectNorm;
+
+        state.baseImageRectNorm = rectNorm || null;
+
+        const payload = {
+          tool: state.tool,
+          color: state.color,
+          size: state.size,
+          alpha: state.alpha,
+          glow: state.glow,
+          spotlight: state.spotlight,
+          blackBg: state.blackBg,
+          baseImageRectNorm: state.baseImageRectNorm,
+        };
+
+        if (sendImage) {
+          payload.baseImageData = state.baseImageData;
+        }
+
+        send({
+          type: 'state',
+          payload: payload
+        });
+      }
+
+      function sendFullFrame() {
+        send({ type: 'fullFrame', draw: drawCanvas.toDataURL('image/png'), fx: fxCanvas.toDataURL('image/png') });
+      }
+
+      function handleMessage(msg) {
+        if (!msg || typeof msg !== 'object') return;
+        switch (msg.type) {
+          case 'state': {
+            // CORRECCIÓN 5: Solo actualizar la imagen base si en verdad llegó una nueva en el payload
+            const oldImageData = state.baseImageData;
+            Object.assign(state, msg.payload || {});
+            
+            if (msg.payload && 'baseImageData' in msg.payload && oldImageData !== state.baseImageData) {
+              loadBaseImageFromState();
+            } else if (msg.payload && msg.payload.baseImageRectNorm) {
+              // Si solo cambia la posición de la imagen, re-renderizamos la base
+              renderBase();
+            }
+            
+            syncUiFromState();
+            renderAll();
+            break;
+          }
+          case 'fullFrame': {
+            if (msg.draw) drawDataUrlToCanvas(msg.draw, drawCanvas, drawCtx);
+            if (msg.fx) drawDataUrlToCanvas(msg.fx, fxCanvas, fxCtx);
+            break;
+          }
+          case 'drawStroke': {
+            renderRemoteStroke(msg.stroke);
+            break;
+          }
+          case 'clearDraw': {
+            clearCanvas(drawCtx, drawCanvas);
+            break;
+          }
+          case 'clearFx': {
+            clearCanvas(fxCtx, fxCanvas);
+            break;
+          }
+          case 'undoFrame': {
+            if (msg.draw) drawDataUrlToCanvas(msg.draw, drawCanvas, drawCtx);
+            break;
+          }
+          case 'pointerPreview': {
+            if (!isProjection) return;
+            const { xNorm, yNorm, x, y, show } = msg;
+            crosshair.style.display = show ? 'block' : 'none';
+            if (show) {
+              const px = xNorm != null ? xNorm * window.innerWidth : x;
+              const py = yNorm != null ? yNorm * window.innerHeight : y;
+              crosshair.style.left = px + 'px';
+              crosshair.style.top = py + 'px';
+            }
+            break;
+          }
+        }
+      }
+
+      function drawDataUrlToCanvas(dataUrl, canvas, ctx) {
+        const img = new Image();
+        img.onload = () => {
+          clearCanvas(ctx, canvas);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = dataUrl;
+      }
+
+      function clearCanvas(ctx, canvas) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      function renderAll() {
+        renderBase();
+        // Asegurarse de que el color de fondo general cambia
+        if (state.blackBg) {
+            document.body.style.background = '#000';
+        } else {
+            document.body.style.background = '';
+        }
+      }
+
+      function renderBase() {
+        clearCanvas(baseCtx, baseCanvas);
+        if (state.blackBg) {
+          baseCtx.fillStyle = '#000';
+          baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
+        }
+        if (state.baseImageObject) {
+          let rect = null;
+          if (state.baseImageRectNorm) {
+            rect = {
+              x: state.baseImageRectNorm.x * baseCanvas.width,
+              y: state.baseImageRectNorm.y * baseCanvas.height,
+              w: state.baseImageRectNorm.w * baseCanvas.width,
+              h: state.baseImageRectNorm.h * baseCanvas.height
+            };
+          } else {
+            rect = fitImageRect(state.baseImageObject.width, state.baseImageObject.height, baseCanvas.width, baseCanvas.height);
+            state.baseImageRectNorm = {
+              x: rect.x / baseCanvas.width,
+              y: rect.y / baseCanvas.height,
+              w: rect.w / baseCanvas.width,
+              h: rect.h / baseCanvas.height
+            };
+          }
+          state.baseImageRect = rect;
+          baseCtx.drawImage(state.baseImageObject, rect.x, rect.y, rect.w, rect.h);
+        }
+      }
+
+      function fitImageRect(imgW, imgH, canvasW, canvasH) {
+        const scale = Math.min(canvasW / imgW, canvasH / imgH) * 0.92;
+        const w = imgW * scale;
+        const h = imgH * scale;
+        return {
+          x: (canvasW - w) / 2,
+          y: (canvasH - h) / 2,
+          w, h
+        };
+      }
+
+      function loadBaseImageFromState() {
+        if (!state.baseImageData) {
+          state.baseImageObject = null;
+          state.baseImageRect = null;
+          state.baseImageRectNorm = null;
+          renderBase();
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          state.baseImageObject = img;
+          if (!state.baseImageRectNorm) {
+            const rect = fitImageRect(img.width, img.height, baseCanvas.width, baseCanvas.height);
+            state.baseImageRect = rect;
+            state.baseImageRectNorm = {
+              x: rect.x / baseCanvas.width,
+              y: rect.y / baseCanvas.height,
+              w: rect.w / baseCanvas.width,
+              h: rect.h / baseCanvas.height
+            };
+          }
+          renderBase();
+        };
+        img.src = state.baseImageData;
+      }
+
+      function snapshot() {
+        if (isProjection) return;
+        state.history.push(drawCanvas.toDataURL('image/png'));
+        if (state.history.length > 20) state.history.shift();
+        state.redo = [];
+      }
+
+      function undo() {
+        if (!state.history.length) return;
+        state.redo.push(drawCanvas.toDataURL('image/png'));
+        const last = state.history.pop();
+        drawDataUrlToCanvas(last, drawCanvas, drawCtx);
+        send({ type: 'undoFrame', draw: last });
+      }
+
+      function redo() {
+        if (!state.redo.length) return;
+        const next = state.redo.pop();
+        state.history.push(drawCanvas.toDataURL('image/png'));
+        drawDataUrlToCanvas(next, drawCanvas, drawCtx);
+        send({ type: 'undoFrame', draw: next });
+      }
+
+      function getPointerPos(event) {
+        const rect = drawCanvas.getBoundingClientRect();
+        const x = (event.clientX - rect.left) * (drawCanvas.width / rect.width);
+        const y = (event.clientY - rect.top) * (drawCanvas.height / rect.height);
+        return { x, y };
+      }
+
+      function rgba(hex, alpha) {
+        const clean = hex.replace('#', '');
+        const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+        const num = parseInt(full, 16);
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+
+      function beginStroke(point) {
+        if (isProjection) return;
+        snapshot();
+        state.pointerDown = true;
+        state.activeStroke = {
+          tool: state.tool,
+          color: state.color,
+          size: state.size,
+          alpha: state.alpha,
+          glow: state.glow,
+          points: [point]
+        };
+
+        const tinyPoint = { x: point.x + 0.01, y: point.y + 0.01 };
+        renderStrokeSegment(point, tinyPoint, state.activeStroke);
+        send({
+          type: 'drawStroke',
+          stroke: {
+            ...state.activeStroke,
+            points: [
+              { xNorm: point.x / drawCanvas.width, yNorm: point.y / drawCanvas.height },
+              { xNorm: tinyPoint.x / drawCanvas.width, yNorm: tinyPoint.y / drawCanvas.height }
+            ]
+          }
+        });
+
+        if (state.spotlight) drawSpotlight(point.x, point.y);
+        send({
+          type: 'pointerPreview',
+          xNorm: point.x / drawCanvas.width,
+          yNorm: point.y / drawCanvas.height,
+          show: true
+        });
+      }
+
+      function extendStroke(point) {
+        if (!state.pointerDown || !state.activeStroke) return;
+        const stroke = state.activeStroke;
+        const prev = stroke.points[stroke.points.length - 1];
+        stroke.points.push(point);
+        renderStrokeSegment(prev, point, stroke);
+
+        send({
+          type: 'drawStroke',
+          stroke: {
+            ...stroke,
+            points: [
+              { xNorm: prev.x / drawCanvas.width, yNorm: prev.y / drawCanvas.height },
+              { xNorm: point.x / drawCanvas.width, yNorm: point.y / drawCanvas.height }
+            ]
+          }
+        });
+
+        send({
+          type: 'pointerPreview',
+          xNorm: point.x / drawCanvas.width,
+          yNorm: point.y / drawCanvas.height,
+          show: true
+        });
+      }
+
+      function endStroke() {
+        if (!state.pointerDown) return;
+        state.pointerDown = false;
+        state.activeStroke = null;
+        send({ type: 'pointerPreview', show: false });
+      }
+
+      function renderRemoteStroke(stroke) {
+        if (!stroke || !stroke.points || stroke.points.length < 2) return;
+        const a = stroke.points[0].xNorm != null
+          ? { x: stroke.points[0].xNorm * drawCanvas.width, y: stroke.points[0].yNorm * drawCanvas.height }
+          : stroke.points[0];
+        const b = stroke.points[1].xNorm != null
+          ? { x: stroke.points[1].xNorm * drawCanvas.width, y: stroke.points[1].yNorm * drawCanvas.height }
+          : stroke.points[1];
+        renderStrokeSegment(a, b, { ...stroke, points: [a, b] });
+      }
+
+      function renderStrokeSegment(a, b, stroke) {
+        const tool = stroke.tool;
+        if (tool === 'spray') return spraySegment(a, b, stroke);
+        if (tool === 'ribbon') return ribbonSegment(a, b, stroke);
+        if (tool === 'neon') return neonSegment(a, b, stroke);
+        if (tool === 'eraser') return eraserSegment(a, b, stroke);
+        return brushSegment(a, b, stroke);
+      }
+
+      function brushSegment(a, b, stroke) {
+        drawCtx.save();
+        drawCtx.globalCompositeOperation = 'source-over';
+        drawCtx.strokeStyle = rgba(stroke.color, stroke.alpha);
+        drawCtx.lineWidth = stroke.size;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+        drawCtx.beginPath();
+        drawCtx.moveTo(a.x, a.y);
+        drawCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        drawCtx.stroke();
+        drawCtx.restore();
+      }
+
+      function neonSegment(a, b, stroke) {
+        drawCtx.save();
+        drawCtx.globalCompositeOperation = 'source-over';
+        drawCtx.strokeStyle = rgba(stroke.color, stroke.alpha);
+        drawCtx.lineWidth = stroke.size;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+        drawCtx.shadowColor = rgba(stroke.color, 0.95);
+        drawCtx.shadowBlur = stroke.size * 2.4 * Math.max(0.2, stroke.glow);
+        drawCtx.beginPath();
+        drawCtx.moveTo(a.x, a.y);
+        drawCtx.lineTo(b.x, b.y);
+        drawCtx.stroke();
+        drawCtx.lineWidth = Math.max(1, stroke.size * 0.32);
+        drawCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+        drawCtx.stroke();
+        drawCtx.restore();
+      }
+
+      function ribbonSegment(a, b, stroke) {
+        fxCtx.save();
+        fxCtx.globalCompositeOperation = 'source-over';
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const len = Math.max(1, Math.hypot(dx, dy));
+        const nx = -dy / len;
+        const ny = dx / len;
+        const w = stroke.size * 0.9;
+        fxCtx.fillStyle = rgba(stroke.color, stroke.alpha * 0.32);
+        fxCtx.beginPath();
+        fxCtx.moveTo(a.x + nx * w, a.y + ny * w);
+        fxCtx.lineTo(a.x - nx * w, a.y - ny * w);
+        fxCtx.lineTo(b.x - nx * w * 0.55, b.y - ny * w * 0.55);
+        fxCtx.lineTo(b.x + nx * w * 0.55, b.y + ny * w * 0.55);
+        fxCtx.closePath();
+        fxCtx.fill();
+        fxCtx.strokeStyle = rgba(stroke.color, stroke.alpha);
+        fxCtx.lineWidth = Math.max(1, stroke.size * 0.24);
+        fxCtx.shadowColor = rgba(stroke.color, 0.9);
+        fxCtx.shadowBlur = stroke.size * 1.6 * Math.max(0.2, stroke.glow);
+        fxCtx.beginPath();
+        fxCtx.moveTo(a.x, a.y);
+        fxCtx.lineTo(b.x, b.y);
+        fxCtx.stroke();
+        fxCtx.restore();
+      }
+
+      function spraySegment(a, b, stroke) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const steps = Math.ceil(dist / 4);
+        drawCtx.save();
+        drawCtx.fillStyle = rgba(stroke.color, Math.max(0.03, stroke.alpha * 0.16));
+        for (let i = 0; i < steps; i++) {
+          const t = i / steps;
+          const x = a.x + dx * t;
+          const y = a.y + dy * t;
+          const count = Math.max(10, Math.floor(stroke.size * 1.2));
+          for (let j = 0; j < count; j++) {
+            const ang = Math.random() * Math.PI * 2;
+            const rad = Math.random() * stroke.size;
+            drawCtx.beginPath();
+            drawCtx.arc(x + Math.cos(ang) * rad, y + Math.sin(ang) * rad, Math.random() * 1.7 + 0.4, 0, Math.PI * 2);
+            drawCtx.fill();
+          }
+        }
+        drawCtx.restore();
+      }
+
+      function eraserSegment(a, b, stroke) {
+        drawCtx.save();
+        drawCtx.globalCompositeOperation = 'destination-out';
+        drawCtx.strokeStyle = 'rgba(0,0,0,1)';
+        drawCtx.lineWidth = stroke.size * 1.25;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+        drawCtx.beginPath();
+        drawCtx.moveTo(a.x, a.y);
+        drawCtx.lineTo(b.x, b.y);
+        drawCtx.stroke();
+        drawCtx.restore();
+      }
+
+      function drawSpotlight(x, y) {
+        fxCtx.save();
+        fxCtx.globalCompositeOperation = 'lighter';
+        const g = fxCtx.createRadialGradient(x, y, 0, x, y, state.size * 8);
+        g.addColorStop(0, rgba(state.color, 0.28));
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        fxCtx.fillStyle = g;
+        fxCtx.beginPath();
+        fxCtx.arc(x, y, state.size * 8, 0, Math.PI * 2);
+        fxCtx.fill();
+        fxCtx.restore();
+      }
+
+      function setTool(tool) {
+        state.tool = tool;
+        syncUiFromState();
+        broadcastState(); // No enviamos imagen
+      }
+
+      function toggleToolbar() {
+        toolbar.classList.toggle('hidden');
+      }
+
+      function makeLink(nextMode) {
+        const url = new URL(location.href);
+        url.searchParams.set('mode', nextMode);
+        if (state.roomId) url.searchParams.set('room', state.roomId);
+        return url.toString();
+      }
+
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          simpleToast('Link copiado');
+        } catch {
+          prompt('Copia este link:', text);
+        }
+      }
+
+      function connectRoom() {
+        const room = roomInput.value.trim().replace(/\s+/g, '-').toLowerCase();
+        if (!room) {
+          simpleToast('Pon un Room ID');
+          return;
+        }
+        state.roomId = room;
+        syncUiFromState();
+        initPeer();
+      }
+
+      // CORRECCIÓN 4: Pasar true a broadcastState para enviar la imagen recién cargada
+      async function loadLocalImage(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          state.baseImageData = reader.result;
+          state.baseImageRect = null;
+          state.baseImageRectNorm = null;
+          loadBaseImageFromState();
+          broadcastState(true); 
+        };
+        reader.readAsDataURL(file);
+      }
+
+      colorInput.addEventListener('input', () => {
+        state.color = colorInput.value;
+        syncUiFromState();
+        broadcastState();
+      });
+      sizeInput.addEventListener('input', () => {
+        state.size = Number(sizeInput.value);
+        syncUiFromState();
+        broadcastState();
+      });
+      alphaInput.addEventListener('input', () => {
+        state.alpha = Number(alphaInput.value);
+        syncUiFromState();
+        broadcastState();
+      });
+      glowInput.addEventListener('input', () => {
+        state.glow = Number(glowInput.value);
+        syncUiFromState();
+        broadcastState();
+      });
+
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
+      spotlightBtn.addEventListener('click', () => {
+        state.spotlight = !state.spotlight;
+        syncUiFromState();
+        broadcastState();
+      });
+      connectBtn.addEventListener('click', connectRoom);
+      roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') connectRoom(); });
+      copyControlLinkBtn.addEventListener('click', () => copyText(makeLink('control')));
+      copyProjectionLinkBtn.addEventListener('click', () => copyText(makeLink('projection')));
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+      quickFullscreenBtn.addEventListener('click', toggleFullscreen);
+      projectionFullscreenBtn.addEventListener('click', toggleFullscreen);
+      quickHideBtn.addEventListener('click', toggleToolbar);
+      toggleToolbarBtn.addEventListener('click', toggleToolbar);
+      toggleHudBtn.addEventListener('click', () => hud.classList.toggle('hidden-in-projection'));
+      projectionHudBtn.addEventListener('click', () => hud.classList.toggle('hidden-in-projection'));
+      
+      // CORRECCIÓN 6: Usamos renderAll() para que el DOM cambie adecuadamente
+      blackBgBtn.addEventListener('click', () => {
+        state.blackBg = !state.blackBg;
+        blackBgBtn.classList.toggle('active', state.blackBg);
+        renderAll();
+        broadcastState(); // Se envía sin recargar la red con la imagen
+      });
+
+      loadImageBtn.addEventListener('click', () => imageInput.click());
+      imageInput.addEventListener('change', e => {
+        const file = e.target.files && e.target.files[0];
+        if (file) loadLocalImage(file);
+      });
+
+      fitImageBtn.addEventListener('click', () => {
+        if (!state.baseImageObject) return;
+        state.baseImageRect = fitImageRect(state.baseImageObject.width, state.baseImageObject.height, baseCanvas.width, baseCanvas.height);
+        state.baseImageRectNorm = {
+          x: state.baseImageRect.x / baseCanvas.width,
+          y: state.baseImageRect.y / baseCanvas.height,
+          w: state.baseImageRect.w / baseCanvas.width,
+          h: state.baseImageRect.h / baseCanvas.height
+        };
+        renderBase();
+        broadcastState();
+      });
+
+      clearBtn.addEventListener('click', () => {
+        snapshot();
+        clearCanvas(drawCtx, drawCanvas);
+        send({ type: 'clearDraw' });
+      });
+      clearFxBtn.addEventListener('click', () => {
+        clearCanvas(fxCtx, fxCanvas);
+        send({ type: 'clearFx' });
+      });
+      undoBtn.addEventListener('click', undo);
+      redoBtn.addEventListener('click', redo);
+
+      function pointerDown(event) {
+        if (isProjection) return;
+        event.preventDefault();
+        const p = getPointerPos(event);
+        beginStroke(p);
+      }
+      function pointerMove(event) {
+        if (!isProjection) {
+          const p = getPointerPos(event);
+          send({
+            type: 'pointerPreview',
+            xNorm: p.x / drawCanvas.width,
+            yNorm: p.y / drawCanvas.height,
+            show: true
+          });
+          if (state.pointerDown) extendStroke(p);
+        }
+      }
+      function pointerUp(event) {
+        if (isProjection) return;
+        event.preventDefault();
+        endStroke();
+      }
+
+      drawCanvas.addEventListener('pointerdown', event => {
+        drawCanvas.setPointerCapture?.(event.pointerId);
+        pointerDown(event);
+      }, { passive: false });
+      drawCanvas.addEventListener('pointermove', pointerMove, { passive: false });
+      window.addEventListener('pointermove', pointerMove, { passive: false });
+      window.addEventListener('pointerup', pointerUp, { passive: false });
+      window.addEventListener('pointercancel', pointerUp, { passive: false });
+      window.addEventListener('resize', resizeCanvases);
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+        else document.exitFullscreen?.();
+      }
+
+      syncUiFromState();
+      resizeCanvases();
+      blackBgBtn.classList.toggle('active', state.blackBg);
+
+      if (state.roomId) initPeer();
+      if (isProjection) setStatus('connecting', state.roomId ? 'Esperando tablet…' : 'Pon room= en la URL');
+      else setStatus('disconnected', state.roomId ? 'Lista para conectar' : 'Elige un Room ID');
+
+      window.addEventListener('beforeunload', destroyPeer);
+
+      window.CarProjectionApp = {
+        state,
+        connectRoom,
+        toggleFullscreen,
+        clearDraw: () => clearBtn.click(),
+        clearFx: () => clearFxBtn.click(),
+      };
+    })();
+  </script>
+</body>
+</html>
