@@ -265,6 +265,14 @@
       background: rgba(8,10,16,0.8); backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.08); box-shadow: var(--shadow);
       display: grid; place-items: center; pointer-events: auto;
+      padding: 0;
+    }
+
+    .mini svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+      pointer-events: none;
     }
 
     .projection-ui {
@@ -457,15 +465,53 @@
 
     .top-adjust-panel {
       position: absolute;
-      top: 84px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 74px;
+      left: 16px;
       z-index: 14;
-      width: min(620px, calc(100vw - 148px));
       max-height: none;
       pointer-events: auto;
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
+    }
+
+    .top-adjust-panel.is-dragging {
+      transition: none;
+    }
+
+    .adjust-shell {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      max-width: calc(100vw - 32px);
+    }
+
+    .panel-drag-handle {
+      width: 42px;
+      min-width: 42px;
+      height: auto;
+      min-height: 42px;
+      padding: 0;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(11, 14, 23, 0.92), rgba(18, 22, 34, 0.88));
+      color: var(--muted);
+      cursor: grab;
+    }
+
+    .panel-drag-handle svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      pointer-events: none;
+    }
+
+    .top-adjust-panel.is-dragging .panel-drag-handle {
+      cursor: grabbing;
+    }
+
+    .floating-lock-btn.active {
+      border-color: rgba(114,242,255,0.34);
+      color: var(--accent);
+      box-shadow: 0 0 18px rgba(114,242,255,0.12);
     }
 
     .pen-popover-header {
@@ -614,7 +660,7 @@
 
     .brush-stroke--neon::before,
     .brush-stroke--neon-strong::before {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 28'%3E%3Cdefs%3E%3Cfilter id='g'%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M8 16 C 54 13, 89 9, 140 16 S 192 19, 212 12' stroke='%2372f2ff' stroke-width='8' stroke-linecap='round' fill='none' filter='url(%23g)' opacity='0.75'/%3E%3Cpath d='M8 16 C 54 13, 89 9, 140 16 S 192 19, 212 12' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 30'%3E%3Cdefs%3E%3Cfilter id='g1'%3E%3CfeGaussianBlur stdDeviation='5'/%3E%3C/filter%3E%3Cfilter id='g2'%3E%3CfeGaussianBlur stdDeviation='2.2'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M8 17 C 54 14, 89 10, 140 17 S 192 20, 212 13' stroke='%2372f2ff' stroke-width='10' stroke-linecap='round' fill='none' filter='url(%23g1)' opacity='0.42'/%3E%3Cpath d='M8 17 C 54 14, 89 10, 140 17 S 192 20, 212 13' stroke='%2372f2ff' stroke-width='5.4' stroke-linecap='round' fill='none' filter='url(%23g2)' opacity='0.68'/%3E%3Cpath d='M8 17 C 54 14, 89 10, 140 17 S 192 20, 212 13' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' fill='none' opacity='0.9'/%3E%3C/svg%3E");
     }
 
     .brush-stroke--spray::before {
@@ -666,20 +712,21 @@
 
     #strokeCard {
       display: grid;
-      grid-template-columns: repeat(3, minmax(150px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(3, minmax(118px, 1fr));
+      gap: 8px;
       padding: 0;
       border: 0;
       background: transparent;
+      width: min(468px, calc(100vw - 92px));
     }
 
     #strokeCard > label {
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 18px;
+      gap: 7px;
+      padding: 10px 10px 9px;
+      border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.08);
       background: linear-gradient(180deg, rgba(11, 14, 23, 0.92), rgba(18, 22, 34, 0.88));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px rgba(0,0,0,0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 10px 24px rgba(0,0,0,0.24);
       min-width: 0;
     }
 
@@ -689,13 +736,13 @@
 
     #strokeCard > label .value-line span:first-child {
       color: var(--text);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.01em;
     }
 
     #strokeCard > label .value-line span:last-child {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
     }
 
@@ -749,11 +796,24 @@
       }
 
       .top-adjust-panel {
-        top: 70px;
+        top: 72px;
+        left: 12px;
+      }
+
+      .adjust-shell {
         width: calc(100vw - 24px);
+        flex-direction: column;
+      }
+
+      .panel-drag-handle {
+        width: 100%;
+        min-width: 0;
+        height: 40px;
+        min-height: 40px;
       }
 
       #strokeCard {
+        width: 100%;
         grid-template-columns: 1fr;
       }
 
@@ -893,16 +953,16 @@
           </button>
 
           <button class="dock-main" id="quickUndoBtn" title="Deshacer" aria-label="Deshacer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M9 7 4 12l5 5"></path>
-              <path d="M20 17a8 8 0 0 0-8-8H4"></path>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 8 5 12l5 4"></path>
+              <path d="M6 12h8.5a5.5 5.5 0 0 1 0 11H11"></path>
             </svg>
           </button>
 
           <button class="dock-main" id="quickRedoBtn" title="Rehacer" aria-label="Rehacer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m15 7 5 5-5 5"></path>
-              <path d="M4 17a8 8 0 0 1 8-8h8"></path>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m14 8 5 4-5 4"></path>
+              <path d="M18 12H9.5a5.5 5.5 0 0 0 0 11H13"></path>
             </svg>
           </button>
 
@@ -1002,24 +1062,42 @@
       </div>
 
       <aside class="top-adjust-panel" id="adjustPanel">
-        <section class="pen-adjust-card" id="strokeCard">
-          <label>
-            <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
-            <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
-          </label>
-          <label>
-            <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
-            <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
-          </label>
-          <label>
-            <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
-            <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
-          </label>
-        </section>
+        <div class="adjust-shell">
+          <button class="panel-drag-handle" id="adjustHandle" title="Mover panel de ajustes" aria-label="Mover panel de ajustes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 6h.01"></path>
+              <path d="M15 6h.01"></path>
+              <path d="M9 12h.01"></path>
+              <path d="M15 12h.01"></path>
+              <path d="M9 18h.01"></path>
+              <path d="M15 18h.01"></path>
+            </svg>
+          </button>
+          <section class="pen-adjust-card" id="strokeCard">
+            <label>
+              <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
+              <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
+            </label>
+            <label>
+              <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
+              <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
+            </label>
+            <label>
+              <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
+              <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
+            </label>
+          </section>
+        </div>
       </aside>
 
 
     <div class="footer-fab" id="fabBar">
+      <button class="mini floating-lock-btn" id="floatLockBtn" title="Desbloquear menús flotantes" aria-label="Desbloquear menús flotantes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 10V8a4 4 0 0 1 8 0v2"></path>
+          <rect x="5" y="10" width="14" height="10" rx="3"></rect>
+        </svg>
+      </button>
       <button class="mini" id="quickHideBtn" title="Mostrar/ocultar panel">☰</button>
       <button class="mini" id="quickFullscreenBtn" title="Pantalla completa">⤢</button>
     </div>
@@ -1072,6 +1150,7 @@
       const adjustPanel = document.getElementById('adjustPanel');
       const dockPositionButtons = document.querySelectorAll('.dock-pos-btn');
       const colorCard = document.getElementById('colorCard');
+      const floatLockBtn = document.getElementById('floatLockBtn');
       const quickHideBtn = document.getElementById('quickHideBtn');
       const quickFullscreenBtn = document.getElementById('quickFullscreenBtn');
       const modeLabel = document.getElementById('modeLabel');
@@ -1081,6 +1160,7 @@
       const statusText = document.getElementById('statusText');
       const toolReadout = document.getElementById('toolReadout');
       const colorInput = document.getElementById('colorInput');
+      const adjustHandle = document.getElementById('adjustHandle');
       const sizeInput = document.getElementById('sizeInput');
       const alphaInput = document.getElementById('alphaInput');
       const glowInput = document.getElementById('glowInput');
@@ -1126,6 +1206,7 @@
       if (isProjection) {
         controlShell.classList.add('hidden-in-projection');
         fabBar.classList.add('hidden-in-projection');
+        adjustPanel.classList.add('hidden-in-projection');
       } else {
         projectionUi.classList.add('hidden-in-projection');
       }
@@ -1135,6 +1216,12 @@
         eraser: { color: '#72f2ff', size: 24, alpha: 1, glow: 0, label: 'Borrador rápido' },
         neon: { color: '#72f2ff', size: 18, alpha: 0.96, glow: 0.72, label: 'Neón' },
         spray: { color: '#72f2ff', size: 28, alpha: 0.28, glow: 0.12, label: 'Aerógrafo suave' }
+      };
+
+      const DEFAULT_GLOBAL_OVERRIDES = {
+        size: null,
+        alpha: null,
+        glow: null,
       };
 
       const TOOL_PROFILE_KEYS = {
@@ -1148,6 +1235,16 @@
         return Object.fromEntries(Object.entries(source).map(([key, value]) => [key, { ...value }]));
       }
 
+      function normalizeGlobalOverrides(overrides) {
+        const next = { ...DEFAULT_GLOBAL_OVERRIDES };
+        if (!overrides || typeof overrides !== 'object') return next;
+        ['size', 'alpha', 'glow'].forEach(key => {
+          const value = overrides[key];
+          next[key] = value == null || value === '' || Number.isNaN(Number(value)) ? null : Number(value);
+        });
+        return next;
+      }
+
       const state = {
         roomId: initialRoom || '',
         tool: 'brush',
@@ -1156,6 +1253,7 @@
         alpha: DEFAULT_TOOL_PROFILES.brush.alpha,
         glow: DEFAULT_TOOL_PROFILES.brush.glow,
         toolProfiles: cloneToolProfiles(),
+        globalOverrides: { ...DEFAULT_GLOBAL_OVERRIDES },
         blackBg: true,
         baseImageVisible: true,
         baseImageData: null,
@@ -1177,7 +1275,10 @@
           penPanelOpen: false,
           panelView: 'brushes',
           activePresetLabel: 'Bolígrafo',
-          isDockDragging: false
+          panelsLocked: true,
+          adjustPanelX: 16,
+          adjustPanelY: 74,
+          isPanelDragging: false
         }
       };
 
@@ -1186,6 +1287,7 @@
       let peerOpen = false;
       let reconnectTimer = null;
       let dockDrag = null;
+      let adjustDrag = null;
 
       try {
         state.ui.dockSide = localStorage.getItem('penDockSide') || 'right';
@@ -1193,6 +1295,13 @@
         state.ui.penPanelOpen = false;
         state.ui.panelView = localStorage.getItem('penPanelView') || 'brushes';
         state.ui.activePresetLabel = localStorage.getItem('penActivePresetLabel') || 'Bolígrafo';
+        state.ui.panelsLocked = localStorage.getItem('floatingPanelsLocked') !== '0';
+        state.ui.adjustPanelX = Number(localStorage.getItem('adjustPanelX') || 16);
+        state.ui.adjustPanelY = Number(localStorage.getItem('adjustPanelY') || 74);
+        const storedOverrides = localStorage.getItem('globalOverrides');
+        if (storedOverrides) {
+          state.globalOverrides = normalizeGlobalOverrides(JSON.parse(storedOverrides));
+        }
       } catch (_) {}
 
       loadToolProfile(state.tool);
@@ -1224,22 +1333,40 @@
         return next;
       }
 
+      function hasGlobalOverride(key) {
+        return state.globalOverrides[key] != null;
+      }
+
+      function getEffectiveToolNumeric(tool, key) {
+        const profile = ensureToolProfile(tool);
+        if (hasGlobalOverride(key)) return Number(state.globalOverrides[key]);
+        return Number(profile[key] ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)][key]);
+      }
+
       function saveCurrentToolProfile() {
         const profile = ensureToolProfile(state.tool);
-        profile.size = state.size;
-        profile.alpha = state.alpha;
-        profile.glow = state.glow;
         profile.color = state.color;
+        if (!hasGlobalOverride('size')) profile.size = state.size;
+        if (!hasGlobalOverride('alpha')) profile.alpha = state.alpha;
+        if (!hasGlobalOverride('glow')) profile.glow = state.glow;
         profile.label = state.ui.activePresetLabel || profile.label || DEFAULT_TOOL_PROFILES[getProfileKey(state.tool)].label;
       }
 
       function loadToolProfile(tool = state.tool) {
         const profile = ensureToolProfile(tool);
-        state.size = Number(profile.size ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)].size);
-        state.alpha = Number(profile.alpha ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)].alpha);
-        state.glow = Number(profile.glow ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)].glow);
-        if (profile.color) state.color = profile.color;
+        state.size = getEffectiveToolNumeric(tool, 'size');
+        state.alpha = getEffectiveToolNumeric(tool, 'alpha');
+        state.glow = getEffectiveToolNumeric(tool, 'glow');
+        state.color = profile.color || DEFAULT_TOOL_PROFILES[getProfileKey(tool)].color;
         state.ui.activePresetLabel = profile.label || DEFAULT_TOOL_PROFILES[getProfileKey(tool)].label;
+      }
+
+      function setGlobalOverride(key, value) {
+        state.globalOverrides[key] = Number(value);
+        if (key === 'size') state.size = Number(value);
+        if (key === 'alpha') state.alpha = Number(value);
+        if (key === 'glow') state.glow = Number(value);
+        persistUiState();
       }
 
       function persistUiState() {
@@ -1249,6 +1376,10 @@
           localStorage.setItem('penPanelOpen', state.ui.penPanelOpen ? '1' : '0');
           localStorage.setItem('penPanelView', state.ui.panelView);
           localStorage.setItem('penActivePresetLabel', state.ui.activePresetLabel || '');
+          localStorage.setItem('floatingPanelsLocked', state.ui.panelsLocked ? '1' : '0');
+          localStorage.setItem('adjustPanelX', String(Math.round(state.ui.adjustPanelX)));
+          localStorage.setItem('adjustPanelY', String(Math.round(state.ui.adjustPanelY)));
+          localStorage.setItem('globalOverrides', JSON.stringify(state.globalOverrides));
         } catch (_) {}
       }
 
@@ -1258,12 +1389,15 @@
 
       function buttonMatchesState(btn) {
         if (!btn.dataset.tool || btn.dataset.tool !== state.tool) return false;
+        if (btn.classList.contains('quick-tool-btn')) return true;
+
         if (btn.dataset.label && state.ui.activePresetLabel) {
           return btn.dataset.label === state.ui.activePresetLabel;
         }
-        if (btn.dataset.size && !approxEqual(btn.dataset.size, state.size)) return false;
-        if (btn.dataset.alpha && !approxEqual(btn.dataset.alpha, state.alpha)) return false;
-        if (btn.dataset.glow && !approxEqual(btn.dataset.glow, state.glow)) return false;
+
+        if (!hasGlobalOverride('size') && btn.dataset.size && !approxEqual(btn.dataset.size, state.size)) return false;
+        if (!hasGlobalOverride('alpha') && btn.dataset.alpha && !approxEqual(btn.dataset.alpha, state.alpha)) return false;
+        if (!hasGlobalOverride('glow') && btn.dataset.glow && !approxEqual(btn.dataset.glow, state.glow)) return false;
         if (btn.dataset.color && btn.dataset.color.toLowerCase() !== state.color.toLowerCase()) return false;
         return true;
       }
@@ -1323,6 +1457,31 @@
         quickPaletteBtn.style.color = state.color;
       }
 
+      function applyAdjustPanelPosition() {
+        if (!adjustPanel || isProjection) return;
+        const panelWidth = adjustPanel.offsetWidth || 520;
+        const panelHeight = adjustPanel.offsetHeight || 76;
+        const nextX = clamp(state.ui.adjustPanelX, 8, Math.max(8, window.innerWidth - panelWidth - 8));
+        const nextY = clamp(state.ui.adjustPanelY, 66, Math.max(66, window.innerHeight - panelHeight - 8));
+        state.ui.adjustPanelX = nextX;
+        state.ui.adjustPanelY = nextY;
+        adjustPanel.style.left = nextX + 'px';
+        adjustPanel.style.top = nextY + 'px';
+      }
+
+      function updateFloatingLockUi() {
+        if (!floatLockBtn) return;
+        const locked = state.ui.panelsLocked;
+        floatLockBtn.classList.toggle('active', !locked);
+        floatLockBtn.title = locked ? 'Desbloquear menús flotantes' : 'Bloquear menús flotantes';
+        floatLockBtn.setAttribute('aria-label', floatLockBtn.title);
+        floatLockBtn.innerHTML = locked
+          ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10V8a4 4 0 0 1 8 0v2"></path><rect x="5" y="10" width="14" height="10" rx="3"></rect></svg>`
+          : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10V8a4 4 0 0 1 7.3-2.1"></path><rect x="5" y="10" width="14" height="10" rx="3"></rect><path d="M15 6l2.6-2.6"></path></svg>`;
+        dockHandle.style.opacity = locked ? '0.42' : '1';
+        adjustHandle.style.opacity = locked ? '0.42' : '1';
+      }
+
       function setDockSide(side, offset = state.ui.dockOffset) {
         state.ui.dockSide = side;
         state.ui.dockOffset = offset;
@@ -1341,7 +1500,7 @@
       }
 
       function beginDockDrag(event) {
-        if (isProjection) return;
+        if (isProjection || state.ui.panelsLocked) return;
         event.preventDefault();
         event.stopPropagation();
         const rect = penDockRoot.getBoundingClientRect();
@@ -1349,7 +1508,7 @@
           offsetX: event.clientX - rect.left,
           offsetY: event.clientY - rect.top
         };
-        state.ui.isDockDragging = true;
+        state.ui.isPanelDragging = true;
         penDockRoot.classList.add('is-dragging');
       }
 
@@ -1369,9 +1528,43 @@
         const snappedSide = nearestDockSide(rect);
         const offset = (snappedSide === 'left' || snappedSide === 'right') ? rect.top : rect.left;
         dockDrag = null;
-        state.ui.isDockDragging = false;
+        state.ui.isPanelDragging = false;
         penDockRoot.classList.remove('is-dragging');
         setDockSide(snappedSide, offset);
+      }
+
+      function beginAdjustDrag(event) {
+        if (isProjection || state.ui.panelsLocked) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const rect = adjustPanel.getBoundingClientRect();
+        adjustDrag = {
+          offsetX: event.clientX - rect.left,
+          offsetY: event.clientY - rect.top
+        };
+        state.ui.isPanelDragging = true;
+        adjustPanel.classList.add('is-dragging');
+      }
+
+      function moveAdjustDrag(event) {
+        if (!adjustDrag) return;
+        state.ui.adjustPanelX = clamp(event.clientX - adjustDrag.offsetX, 8, Math.max(8, window.innerWidth - adjustPanel.offsetWidth - 8));
+        state.ui.adjustPanelY = clamp(event.clientY - adjustDrag.offsetY, 66, Math.max(66, window.innerHeight - adjustPanel.offsetHeight - 8));
+        applyAdjustPanelPosition();
+      }
+
+      function endAdjustDrag() {
+        if (!adjustDrag) return;
+        adjustDrag = null;
+        state.ui.isPanelDragging = false;
+        adjustPanel.classList.remove('is-dragging');
+        persistUiState();
+      }
+
+      function togglePanelsLocked() {
+        state.ui.panelsLocked = !state.ui.panelsLocked;
+        updateFloatingLockUi();
+        persistUiState();
       }
 
       function applyToolPreset(button) {
@@ -1421,7 +1614,10 @@
         }
 
         renderAll();
-        requestAnimationFrame(applyDockPosition);
+        requestAnimationFrame(() => {
+          applyDockPosition();
+          applyAdjustPanelPosition();
+        });
       }
 
       function syncUiFromState() {
@@ -1448,7 +1644,9 @@
         crosshair.style.height = pointerSize + 'px';
 
         updatePanelModeUi();
+        updateFloatingLockUi();
         applyDockPosition();
+        applyAdjustPanelPosition();
       }
 
       function setStatus(kind, text) {
@@ -1641,6 +1839,7 @@
           alpha: state.alpha,
           glow: state.glow,
           toolProfiles: state.toolProfiles,
+          globalOverrides: state.globalOverrides,
           blackBg: state.blackBg,
           baseImageVisible: state.baseImageVisible,
           baseImageRectNorm: state.baseImageRectNorm,
@@ -1668,8 +1867,9 @@
             const oldImageData = state.baseImageData;
             const payload = msg.payload || {};
             const incomingProfiles = normalizeToolProfiles(payload.toolProfiles);
+            const incomingOverrides = normalizeGlobalOverrides(payload.globalOverrides);
 
-            Object.assign(state, { ...payload, toolProfiles: incomingProfiles });
+            Object.assign(state, { ...payload, toolProfiles: incomingProfiles, globalOverrides: incomingOverrides });
             loadToolProfile(state.tool);
 
             if ('baseImageData' in payload && oldImageData !== state.baseImageData) {
@@ -1963,30 +2163,31 @@
       }
 
       function neonSegment(a, b, stroke) {
-        const glowStrength = clamp(stroke.glow, 0, 1);
-        const haloWidth = stroke.size * (1.85 + glowStrength * 0.55);
-        const outerBlur = stroke.size * (2.2 + glowStrength * 2.8);
-        const midBlur = stroke.size * (0.8 + glowStrength * 1.35);
-        const bodyAlpha = Math.min(0.96, 0.58 + glowStrength * 0.18) * stroke.alpha;
-        const highlightAlpha = Math.min(0.58, 0.24 + glowStrength * 0.18) * stroke.alpha;
+        const glowStrength = clamp(stroke.glow ?? 0.5, 0, 1);
+        const alphaVal = clamp(stroke.alpha ?? 1, 0.05, 1);
+        const baseSize = Math.max(1.2, stroke.size * 0.4);
+        const haloOuterWidth = baseSize * (2.25 + glowStrength * 0.95);
+        const haloInnerWidth = baseSize * (1.35 + glowStrength * 0.38);
+        const haloOuterBlur = baseSize * (3.8 + glowStrength * 2.1);
+        const haloInnerBlur = baseSize * (1.6 + glowStrength * 0.9);
 
         fxCtx.save();
         fxCtx.globalCompositeOperation = 'screen';
         fxCtx.lineCap = 'round';
         fxCtx.lineJoin = 'round';
 
-        fxCtx.strokeStyle = rgba(stroke.color, 0.16 + glowStrength * 0.14);
-        fxCtx.lineWidth = haloWidth * 1.45;
         fxCtx.shadowColor = rgba(stroke.color, 1);
-        fxCtx.shadowBlur = outerBlur;
+        fxCtx.shadowBlur = haloOuterBlur;
+        fxCtx.strokeStyle = rgba(stroke.color, (0.08 + glowStrength * 0.04) * alphaVal);
+        fxCtx.lineWidth = haloOuterWidth;
         fxCtx.beginPath();
         fxCtx.moveTo(a.x, a.y);
         fxCtx.lineTo(b.x, b.y);
         fxCtx.stroke();
 
-        fxCtx.strokeStyle = rgba(stroke.color, 0.22 + glowStrength * 0.16);
-        fxCtx.lineWidth = haloWidth;
-        fxCtx.shadowBlur = midBlur;
+        fxCtx.shadowBlur = haloInnerBlur;
+        fxCtx.strokeStyle = rgba(stroke.color, (0.12 + glowStrength * 0.06) * alphaVal);
+        fxCtx.lineWidth = haloInnerWidth;
         fxCtx.beginPath();
         fxCtx.moveTo(a.x, a.y);
         fxCtx.lineTo(b.x, b.y);
@@ -1994,19 +2195,28 @@
         fxCtx.restore();
 
         drawCtx.save();
-        drawCtx.globalCompositeOperation = 'source-over';
         drawCtx.lineCap = 'round';
         drawCtx.lineJoin = 'round';
+        drawCtx.globalCompositeOperation = 'screen';
 
+        const bodyAlpha = Math.min(1, alphaVal * 0.68);
         drawCtx.strokeStyle = rgba(stroke.color, bodyAlpha);
-        drawCtx.lineWidth = Math.max(1.5, stroke.size * 0.56);
+        drawCtx.lineWidth = Math.max(1.2, baseSize);
         drawCtx.beginPath();
         drawCtx.moveTo(a.x, a.y);
         drawCtx.lineTo(b.x, b.y);
         drawCtx.stroke();
 
-        drawCtx.strokeStyle = `rgba(255,255,255,${highlightAlpha.toFixed(3)})`;
-        drawCtx.lineWidth = Math.max(0.9, stroke.size * 0.12);
+        drawCtx.strokeStyle = rgba(stroke.color, Math.min(1, alphaVal * 0.38));
+        drawCtx.lineWidth = Math.max(0.9, baseSize * 0.62);
+        drawCtx.beginPath();
+        drawCtx.moveTo(a.x, a.y);
+        drawCtx.lineTo(b.x, b.y);
+        drawCtx.stroke();
+
+        drawCtx.globalCompositeOperation = 'source-over';
+        drawCtx.strokeStyle = `rgba(255,255,255,${Math.min(1, alphaVal * 0.82).toFixed(3)})`;
+        drawCtx.lineWidth = Math.max(0.7, baseSize * 0.26);
         drawCtx.beginPath();
         drawCtx.moveTo(a.x, a.y);
         drawCtx.lineTo(b.x, b.y);
@@ -2175,35 +2385,22 @@
         state.color = colorInput.value;
         const profile = ensureToolProfile(state.tool);
         profile.color = state.color;
-        state.ui.activePresetLabel = '';
-        profile.label = '';
+        state.ui.activePresetLabel = profile.label || state.ui.activePresetLabel;
         syncUiFromState();
         broadcastState();
       });
       sizeInput.addEventListener('input', () => {
-        state.size = Number(sizeInput.value);
-        const profile = ensureToolProfile(state.tool);
-        profile.size = state.size;
-        state.ui.activePresetLabel = '';
-        profile.label = '';
+        setGlobalOverride('size', sizeInput.value);
         syncUiFromState();
         broadcastState();
       });
       alphaInput.addEventListener('input', () => {
-        state.alpha = Number(alphaInput.value);
-        const profile = ensureToolProfile(state.tool);
-        profile.alpha = state.alpha;
-        state.ui.activePresetLabel = '';
-        profile.label = '';
+        setGlobalOverride('alpha', alphaInput.value);
         syncUiFromState();
         broadcastState();
       });
       glowInput.addEventListener('input', () => {
-        state.glow = Number(glowInput.value);
-        const profile = ensureToolProfile(state.tool);
-        profile.glow = state.glow;
-        state.ui.activePresetLabel = '';
-        profile.label = '';
+        setGlobalOverride('glow', glowInput.value);
         syncUiFromState();
         broadcastState();
       });
@@ -2249,6 +2446,8 @@
 
       dockPositionButtons.forEach(btn => btn.addEventListener('click', () => setDockSide(btn.dataset.side, btn.dataset.side === 'left' || btn.dataset.side === 'right' ? penDockRoot.getBoundingClientRect().top : penDockRoot.getBoundingClientRect().left)));
       dockHandle.addEventListener('pointerdown', beginDockDrag, { passive: false });
+      adjustHandle.addEventListener('pointerdown', beginAdjustDrag, { passive: false });
+      floatLockBtn.addEventListener('click', togglePanelsLocked);
       connectBtn.addEventListener('click', connectRoom);
       roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') connectRoom(); });
       copyControlLinkBtn.addEventListener('click', () => copyText(makeLink('control')));
@@ -2315,8 +2514,12 @@
       }
       
       function pointerMove(event) {
-        if (state.ui.isDockDragging) {
+        if (dockDrag) {
           moveDockDrag(event);
+          return;
+        }
+        if (adjustDrag) {
+          moveAdjustDrag(event);
           return;
         }
 
@@ -2333,8 +2536,12 @@
       }
       
       function pointerUp(event) {
-        if (state.ui.isDockDragging) {
+        if (dockDrag) {
           endDockDrag();
+          return;
+        }
+        if (adjustDrag) {
+          endAdjustDrag();
           return;
         }
 
@@ -2369,6 +2576,7 @@
       togglePenPanel(false);
       syncUiFromState();
       resizeCanvases();
+      updateFloatingLockUi();
       blackBgBtn.classList.toggle('active', state.blackBg);
 
       if (state.roomId) initPeer();
