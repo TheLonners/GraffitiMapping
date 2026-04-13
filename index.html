@@ -413,6 +413,14 @@
       color: #ffb3c3;
     }
 
+    #quickUndoBtn {
+      color: #ffd166;
+    }
+
+    #quickRedoBtn {
+      color: #8fe3ff;
+    }
+
     #quickSaveBtn {
       color: #9effd0;
     }
@@ -447,8 +455,18 @@
       flex-direction: column;
     }
 
-    .utility-popover.is-collapsed {
-      display: none;
+    .top-adjust-panel {
+      position: absolute;
+      top: 84px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 14;
+      width: min(860px, calc(100vw - 148px));
+      max-height: none;
+      pointer-events: auto;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(16, 18, 27, 0.96), rgba(20, 24, 35, 0.94));
+      box-shadow: 0 18px 46px rgba(0,0,0,0.36);
     }
 
     .utility-popover-header {
@@ -463,6 +481,16 @@
     .utility-popover-body {
       padding: 12px;
       overflow: auto;
+    }
+
+    .top-adjust-panel .utility-popover-header {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .top-adjust-panel .utility-popover-body {
+      padding: 14px 16px 16px;
+      overflow: visible;
     }
 
     .pen-popover-header {
@@ -661,6 +689,62 @@
       grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 
+    #strokeCard {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    #strokeCard > label {
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    #strokeCard > label .value-line span:first-child {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #strokeCard input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(114,242,255,0.26), rgba(154,124,255,0.22));
+      border: 1px solid rgba(255,255,255,0.06);
+      outline: none;
+    }
+
+    #strokeCard input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: #dffcff;
+      box-shadow: 0 0 0 5px rgba(114,242,255,0.12), 0 4px 14px rgba(0,0,0,0.28);
+      cursor: pointer;
+    }
+
+    #strokeCard input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.85);
+      background: #dffcff;
+      box-shadow: 0 0 0 5px rgba(114,242,255,0.12), 0 4px 14px rgba(0,0,0,0.28);
+      cursor: pointer;
+    }
+
     .pen-dock-root[data-side="right"] .pen-popover,
     .pen-dock-root[data-side="left"] .pen-popover {
       width: min(430px, calc(100vw - 112px));
@@ -675,6 +759,15 @@
       .pen-popover,
       .utility-popover {
         width: min(430px, calc(100vw - 24px));
+      }
+
+      .top-adjust-panel {
+        top: 70px;
+        width: calc(100vw - 24px);
+      }
+
+      #strokeCard {
+        grid-template-columns: 1fr;
       }
 
       .pen-popover-header {
@@ -753,7 +846,7 @@
             <input type="file" id="imageInput" accept="image/*" class="hidden-in-projection" style="display:none" />
             <div class="row">
               <button id="clearBtn" class="danger">Limpiar dibujo</button>
-              <button id="clearFxBtn">Limpiar FX</button>
+              <button id="toggleImageBtn">Ocultar imagen</button>
             </div>
             <div class="row">
               <button id="undoBtn">Deshacer</button>
@@ -778,10 +871,13 @@
           <button class="dock-handle" id="dockHandle" title="Arrastra para mover el menú">⋮⋮</button>
 
           <button class="dock-main" id="penMenuToggle" title="Abrir biblioteca de pinceles" aria-label="Abrir biblioteca de pinceles">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <circle cx="12" cy="5" r="1.9"></circle>
-              <circle cx="12" cy="12" r="1.9"></circle>
-              <circle cx="12" cy="19" r="1.9"></circle>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="6" x2="19" y2="6"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <line x1="5" y1="18" x2="19" y2="18"></line>
+              <circle cx="9" cy="6" r="2"></circle>
+              <circle cx="15" cy="12" r="2"></circle>
+              <circle cx="11" cy="18" r="2"></circle>
             </svg>
           </button>
 
@@ -809,14 +905,17 @@
             </svg>
           </button>
 
-          <button class="dock-main" id="quickAdjustBtn" title="Abrir ajustes de trazo" aria-label="Abrir ajustes de trazo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="5" y1="6" x2="19" y2="6"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <line x1="5" y1="18" x2="19" y2="18"></line>
-              <circle cx="9" cy="6" r="2"></circle>
-              <circle cx="15" cy="12" r="2"></circle>
-              <circle cx="11" cy="18" r="2"></circle>
+          <button class="dock-main" id="quickUndoBtn" title="Deshacer" aria-label="Deshacer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 7 4 12l5 5"></path>
+              <path d="M20 17a8 8 0 0 0-8-8H4"></path>
+            </svg>
+          </button>
+
+          <button class="dock-main" id="quickRedoBtn" title="Rehacer" aria-label="Rehacer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m15 7 5 5-5 5"></path>
+              <path d="M4 17a8 8 0 0 1 8-8h8"></path>
             </svg>
           </button>
 
@@ -913,32 +1012,33 @@
           </div>
         </aside>
 
-        <aside class="utility-popover is-collapsed" id="adjustPanel">
-          <div class="utility-popover-header">
-            <div class="pen-popover-title">
-              <strong>Ajustes</strong>
-              <span id="adjustReadout">Trazo</span>
-            </div>
-          </div>
-          <div class="utility-popover-body">
-            <section class="pen-adjust-card" id="strokeCard">
-              <div class="group-title"><span>Trazo</span><span id="colorHexLabel">#72f2ff</span></div>
-              <label>
-                <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
-                <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
-              </label>
-              <label>
-                <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
-                <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
-              </label>
-              <label>
-                <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
-                <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
-              </label>
-            </section>
-          </div>
-        </aside>
       </div>
+
+      <aside class="utility-popover top-adjust-panel" id="adjustPanel">
+        <div class="utility-popover-header">
+          <div class="pen-popover-title">
+            <strong>Ajustes rápidos</strong>
+            <span id="adjustReadout">Trazo activo</span>
+          </div>
+          <div class="group-title"><span>Siempre visible</span><span id="colorHexLabel">#72F2FF</span></div>
+        </div>
+        <div class="utility-popover-body">
+          <section class="pen-adjust-card" id="strokeCard">
+            <label>
+              <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
+              <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
+            </label>
+            <label>
+              <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
+              <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
+            </label>
+            <label>
+              <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
+              <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
+            </label>
+          </section>
+        </div>
+      </aside>
 
 
     <div class="footer-fab" id="fabBar">
@@ -984,7 +1084,8 @@
       const penMenuToggle = document.getElementById('penMenuToggle');
       const dockHandle = document.getElementById('dockHandle');
       const quickPaletteBtn = document.getElementById('quickPaletteBtn');
-      const quickAdjustBtn = document.getElementById('quickAdjustBtn');
+      const quickUndoBtn = document.getElementById('quickUndoBtn');
+      const quickRedoBtn = document.getElementById('quickRedoBtn');
       const quickClearBtn = document.getElementById('quickClearBtn');
       const quickSaveBtn = document.getElementById('quickSaveBtn');
       const brushesPanel = document.getElementById('brushesPanel');
@@ -1014,7 +1115,7 @@
       const fitImageBtn = document.getElementById('fitImageBtn');
       const imageInput = document.getElementById('imageInput');
       const clearBtn = document.getElementById('clearBtn');
-      const clearFxBtn = document.getElementById('clearFxBtn');
+      const toggleImageBtn = document.getElementById('toggleImageBtn');
       const undoBtn = document.getElementById('undoBtn');
       const redoBtn = document.getElementById('redoBtn');
       const paletteChips = document.getElementById('paletteChips');
@@ -1061,6 +1162,7 @@
         alpha: 1,
         glow: 0.7,
         blackBg: true,
+        baseImageVisible: true,
         baseImageData: null,
         baseImageObject: null,
         baseImageRect: null,
@@ -1078,7 +1180,6 @@
           dockSide: 'right',
           dockOffset: 96,
           penPanelOpen: false,
-          adjustPanelOpen: false,
           panelView: 'brushes',
           activePresetLabel: 'Bolígrafo',
           isDockDragging: false
@@ -1095,7 +1196,6 @@
         state.ui.dockSide = localStorage.getItem('penDockSide') || 'right';
         state.ui.dockOffset = Number(localStorage.getItem('penDockOffset') || 96);
         state.ui.penPanelOpen = false;
-        state.ui.adjustPanelOpen = false;
         state.ui.panelView = localStorage.getItem('penPanelView') || 'brushes';
         state.ui.activePresetLabel = localStorage.getItem('penActivePresetLabel') || 'Bolígrafo';
       } catch (_) {}
@@ -1109,7 +1209,6 @@
           localStorage.setItem('penDockSide', state.ui.dockSide);
           localStorage.setItem('penDockOffset', String(Math.round(state.ui.dockOffset)));
           localStorage.setItem('penPanelOpen', state.ui.penPanelOpen ? '1' : '0');
-          localStorage.setItem('penAdjustPanelOpen', state.ui.adjustPanelOpen ? '1' : '0');
           localStorage.setItem('penPanelView', state.ui.panelView);
           localStorage.setItem('penActivePresetLabel', state.ui.activePresetLabel || '');
         } catch (_) {}
@@ -1137,13 +1236,11 @@
         const colorsViewActive = open && state.ui.panelView === 'colors';
 
         toolsPanel.classList.toggle('is-collapsed', !open);
-        adjustPanel.classList.toggle('is-collapsed', !state.ui.adjustPanelOpen);
         brushesPanel.classList.toggle('is-active', brushesViewActive);
         colorsPanel.classList.toggle('is-active', colorsViewActive);
 
         penMenuToggle.classList.toggle('active', brushesViewActive);
         quickPaletteBtn.classList.toggle('active', colorsViewActive);
-        quickAdjustBtn.classList.toggle('active', state.ui.adjustPanelOpen);
 
         panelTitle.textContent = state.ui.panelView === 'colors' ? 'Color' : 'Pinceles';
       }
@@ -1157,13 +1254,6 @@
 
       function togglePenPanel(force) {
         state.ui.penPanelOpen = typeof force === 'boolean' ? force : !state.ui.penPanelOpen;
-        updatePanelModeUi();
-        persistUiState();
-        requestAnimationFrame(applyDockPosition);
-      }
-
-      function toggleAdjustPanel(force) {
-        state.ui.adjustPanelOpen = typeof force === 'boolean' ? force : !state.ui.adjustPanelOpen;
         updatePanelModeUi();
         persistUiState();
         requestAnimationFrame(applyDockPosition);
@@ -1305,6 +1395,8 @@
         adjustReadout.textContent = state.tool === 'eraser'
           ? 'Borrador'
           : (state.ui.activePresetLabel || 'Trazo');
+        toggleImageBtn.textContent = state.baseImageVisible ? 'Ocultar imagen' : 'Mostrar imagen';
+        toggleImageBtn.classList.toggle('active', !state.baseImageVisible);
         document.querySelectorAll('.tool-btn').forEach(btn => {
           btn.classList.toggle('active', buttonMatchesState(btn));
         });
@@ -1337,18 +1429,22 @@
       }
 
       function makePeer(role, roomId) {
-        const id = peerIdForRoom(role, roomId);
-        return new Peer(id);
+        if (role === 'projection') {
+          return new Peer(peerIdForRoom(role, roomId));
+        }
+        return new Peer();
       }
 
+      
       function initPeer() {
         if (!state.roomId) return;
         destroyPeer();
-        setStatus('connecting', 'Conectando…');
+        setStatus('connecting', isProjection ? 'Iniciando proyección…' : 'Iniciando control…');
         peer = makePeer(isProjection ? 'projection' : 'control', state.roomId);
 
         peer.on('open', () => {
           peerOpen = true;
+          clearTimeout(reconnectTimer);
           if (isProjection) {
             setStatus('connecting', 'Esperando tablet…');
           } else {
@@ -1361,46 +1457,83 @@
           attachConnection(incoming);
         });
 
-        peer.on('error', err => {
-          console.warn('Peer error', err);
-          setStatus('disconnected', 'Error de conexión');
-        });
-
         peer.on('disconnected', () => {
           peerOpen = false;
-          setStatus('disconnected', 'Desconectado');
+          if (isProjection) {
+            setStatus('connecting', 'Reconectando servidor…');
+            clearTimeout(reconnectTimer);
+            reconnectTimer = setTimeout(() => {
+              try { peer?.reconnect?.(); } catch (_) {}
+            }, 1400);
+          } else {
+            setStatus('disconnected', 'Reconectando control…');
+            scheduleReconnect();
+          }
+        });
+
+        peer.on('error', err => {
+          console.warn('Peer error', err);
+          if (err?.type === 'unavailable-id' && !isProjection) {
+            destroyPeer();
+          }
+          setStatus('disconnected', 'Error de conexión');
+          if (!isProjection) scheduleReconnect();
         });
       }
 
       function tryConnectToProjection() {
-        if (!peer || !peerOpen) return;
+        if (!peer || !peerOpen || isProjection || !state.roomId) return;
         const projectionId = peerIdForRoom('projection', state.roomId);
-        const outgoing = peer.connect(projectionId, { reliable: true });
+
+        if (conn && (conn.open || conn.peer === projectionId)) return;
+
+        setStatus('connecting', 'Buscando proyección…');
+        const outgoing = peer.connect(projectionId, {
+          reliable: true,
+          metadata: { role: 'control', roomId: state.roomId }
+        });
         attachConnection(outgoing);
       }
 
       function attachConnection(c) {
-        if (conn && conn.open) conn.close();
+        if (!c) return;
+        clearTimeout(reconnectTimer);
+
+        if (conn && conn !== c) {
+          try { conn.close(); } catch (_) {}
+        }
+
         conn = c;
         setStatus('connecting', isProjection ? 'Tablet conectando…' : 'Conectando a proyección…');
 
         conn.on('open', () => {
+          clearTimeout(reconnectTimer);
           setStatus('connected', 'Conectado');
-          broadcastState(true);
-          // Si la tablet (control) se vuelve a conectar tras un bloqueo, enviará 
-          // automáticamente su lienzo a la proyección para sincronizar ambos.
-          if (!isProjection) {
-             sendFullFrame(); 
+
+          if (isProjection) {
+            broadcastState(true);
+            sendFullFrame();
+          } else {
+            syncUiFromState();
           }
         });
 
         conn.on('data', handleMessage);
+
         conn.on('close', () => {
-          setStatus('disconnected', 'Conexión cerrada');
-          if (!isProjection) scheduleReconnect();
+          if (conn === c) conn = null;
+          if (isProjection) {
+            setStatus('connecting', 'Esperando tablet…');
+            return;
+          }
+          setStatus('disconnected', 'Conexión perdida');
+          scheduleReconnect();
         });
-        conn.on('error', () => {
-          setStatus('disconnected', 'Error de canal');
+
+        conn.on('error', err => {
+          console.warn('Connection error', err);
+          if (conn === c && !c.open) conn = null;
+          setStatus('disconnected', 'Error en conexión');
           if (!isProjection) scheduleReconnect();
         });
       }
@@ -1415,30 +1548,35 @@
         peerOpen = false;
       }
 
-      // SOLUCIÓN 2: Controlar la reconexión durante el bloqueo de pantalla
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          // Si se desbloqueó la tablet y se perdió la conexión
-          if (!isProjection && (!conn || !conn.open)) {
-            initPeer();
-          }
-        } else {
-          // Si la pantalla se apagó/ocultó, detenemos el loop de reconexión
+        if (document.visibilityState === 'hidden') {
           clearTimeout(reconnectTimer);
+          return;
+        }
+
+        if (!isProjection && (!conn || !conn.open)) {
+          scheduleReconnect(true);
         }
       });
 
-      function scheduleReconnect() {
+      function scheduleReconnect(immediate = false) {
         clearTimeout(reconnectTimer);
-        // Evitamos reconectar si la tablet está apagada o la pestaña oculta
-        if (document.visibilityState === 'hidden') return;
-        
+        if (isProjection || !state.roomId || document.visibilityState === 'hidden') return;
+
         reconnectTimer = setTimeout(() => {
-          if (!isProjection && state.roomId) initPeer();
-        }, 1200);
+          if (conn && conn.open) return;
+
+          if (!peer || peer.destroyed || !peerOpen) {
+            initPeer();
+            return;
+          }
+
+          tryConnectToProjection();
+        }, immediate ? 120 : 1600);
       }
 
       function send(msg) {
+
         if (conn && conn.open) conn.send(msg);
       }
 
@@ -1461,6 +1599,7 @@
           alpha: state.alpha,
           glow: state.glow,
           blackBg: state.blackBg,
+          baseImageVisible: state.baseImageVisible,
           baseImageRectNorm: state.baseImageRectNorm,
         };
 
@@ -1470,6 +1609,7 @@
 
         send({
           type: 'state',
+          sourceRole: isProjection ? 'projection' : 'control',
           payload: payload
         });
       }
@@ -1484,13 +1624,13 @@
           case 'state': {
             const oldImageData = state.baseImageData;
             Object.assign(state, msg.payload || {});
-            
+
             if (msg.payload && 'baseImageData' in msg.payload && oldImageData !== state.baseImageData) {
               loadBaseImageFromState();
-            } else if (msg.payload && msg.payload.baseImageRectNorm) {
+            } else {
               renderBase();
             }
-            
+
             syncUiFromState();
             renderAll();
             break;
@@ -1514,6 +1654,7 @@
           }
           case 'undoFrame': {
             if (msg.draw) drawDataUrlToCanvas(msg.draw, drawCanvas, drawCtx);
+            if (msg.fx) drawDataUrlToCanvas(msg.fx, fxCanvas, fxCtx);
             break;
           }
           case 'pointerPreview': {
@@ -1563,7 +1704,7 @@
           baseCtx.fillStyle = '#000';
           baseCtx.fillRect(0, 0, baseCanvas.width, baseCanvas.height);
         }
-        if (state.baseImageObject) {
+        if (state.baseImageVisible && state.baseImageObject) {
           let rect = null;
           if (state.baseImageRectNorm) {
             rect = {
@@ -1625,25 +1766,36 @@
 
       function snapshot() {
         if (isProjection) return;
-        state.history.push(drawCanvas.toDataURL('image/png'));
+        state.history.push({
+          draw: drawCanvas.toDataURL('image/png'),
+          fx: fxCanvas.toDataURL('image/png')
+        });
         if (state.history.length > 20) state.history.shift();
         state.redo = [];
       }
 
       function undo() {
         if (!state.history.length) return;
-        state.redo.push(drawCanvas.toDataURL('image/png'));
+        state.redo.push({
+          draw: drawCanvas.toDataURL('image/png'),
+          fx: fxCanvas.toDataURL('image/png')
+        });
         const last = state.history.pop();
-        drawDataUrlToCanvas(last, drawCanvas, drawCtx);
-        send({ type: 'undoFrame', draw: last });
+        drawDataUrlToCanvas(last.draw, drawCanvas, drawCtx);
+        drawDataUrlToCanvas(last.fx, fxCanvas, fxCtx);
+        send({ type: 'undoFrame', draw: last.draw, fx: last.fx });
       }
 
       function redo() {
         if (!state.redo.length) return;
         const next = state.redo.pop();
-        state.history.push(drawCanvas.toDataURL('image/png'));
-        drawDataUrlToCanvas(next, drawCanvas, drawCtx);
-        send({ type: 'undoFrame', draw: next });
+        state.history.push({
+          draw: drawCanvas.toDataURL('image/png'),
+          fx: fxCanvas.toDataURL('image/png')
+        });
+        drawDataUrlToCanvas(next.draw, drawCanvas, drawCtx);
+        drawDataUrlToCanvas(next.fx, fxCanvas, fxCtx);
+        send({ type: 'undoFrame', draw: next.draw, fx: next.fx });
       }
 
       function getPointerPos(event) {
@@ -1764,38 +1916,50 @@
       }
 
       function neonSegment(a, b, stroke) {
-        const coreAlpha = Math.min(1, stroke.alpha * 0.98);
-        const glowStrength = Math.max(0.18, stroke.glow);
+        const glowStrength = clamp(stroke.glow, 0, 1);
+        const haloAlpha = Math.max(0.16, stroke.alpha * (0.22 + glowStrength * 0.22));
+        const outerBlur = stroke.size * (2.6 + glowStrength * 2.8);
+        const innerBlur = stroke.size * (0.9 + glowStrength * 1.4);
+
+        fxCtx.save();
+        fxCtx.globalCompositeOperation = 'lighter';
+        fxCtx.lineCap = 'round';
+        fxCtx.lineJoin = 'round';
+        fxCtx.strokeStyle = rgba(stroke.color, haloAlpha);
+        fxCtx.lineWidth = stroke.size * (1.9 + glowStrength * 0.35);
+        fxCtx.shadowColor = rgba(stroke.color, 1);
+        fxCtx.shadowBlur = outerBlur;
+        fxCtx.beginPath();
+        fxCtx.moveTo(a.x, a.y);
+        fxCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        fxCtx.stroke();
+
+        fxCtx.strokeStyle = rgba(stroke.color, Math.min(0.95, haloAlpha + 0.1));
+        fxCtx.lineWidth = stroke.size * 1.18;
+        fxCtx.shadowBlur = innerBlur;
+        fxCtx.beginPath();
+        fxCtx.moveTo(a.x, a.y);
+        fxCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        fxCtx.stroke();
+        fxCtx.restore();
 
         drawCtx.save();
         drawCtx.globalCompositeOperation = 'source-over';
         drawCtx.lineCap = 'round';
         drawCtx.lineJoin = 'round';
-
-        drawCtx.strokeStyle = rgba(stroke.color, Math.min(1, stroke.alpha * 0.42));
-        drawCtx.lineWidth = stroke.size * 1.45;
-        drawCtx.shadowColor = rgba(stroke.color, 0.98);
-        drawCtx.shadowBlur = stroke.size * (2.8 + glowStrength * 3.2);
+        drawCtx.strokeStyle = rgba(stroke.color, Math.min(1, stroke.alpha * 0.96));
+        drawCtx.lineWidth = Math.max(1.6, stroke.size * 0.72);
         drawCtx.beginPath();
         drawCtx.moveTo(a.x, a.y);
         drawCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
         drawCtx.stroke();
 
-        drawCtx.shadowBlur = 0;
-        drawCtx.strokeStyle = rgba(stroke.color, Math.min(1, stroke.alpha * 0.95));
-        drawCtx.lineWidth = Math.max(1.5, stroke.size * 0.84);
+        drawCtx.strokeStyle = `rgba(255,255,255,${Math.min(1, stroke.alpha * 0.92)})`;
+        drawCtx.lineWidth = Math.max(1, stroke.size * 0.26);
         drawCtx.beginPath();
         drawCtx.moveTo(a.x, a.y);
         drawCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
         drawCtx.stroke();
-
-        drawCtx.strokeStyle = `rgba(255,255,255,${coreAlpha})`;
-        drawCtx.lineWidth = Math.max(1.2, stroke.size * 0.34);
-        drawCtx.beginPath();
-        drawCtx.moveTo(a.x, a.y);
-        drawCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
-        drawCtx.stroke();
-
         drawCtx.restore();
       }
 
@@ -1824,17 +1988,22 @@
       }
 
       function eraserSegment(a, b, stroke) {
-        drawCtx.save();
-        drawCtx.globalCompositeOperation = 'destination-out';
-        drawCtx.strokeStyle = 'rgba(0,0,0,1)';
-        drawCtx.lineWidth = stroke.size * 1.25;
-        drawCtx.lineCap = 'round';
-        drawCtx.lineJoin = 'round';
-        drawCtx.beginPath();
-        drawCtx.moveTo(a.x, a.y);
-        drawCtx.lineTo(b.x, b.y);
-        drawCtx.stroke();
-        drawCtx.restore();
+        [
+          { ctx: drawCtx, width: stroke.size * 1.25 },
+          { ctx: fxCtx, width: stroke.size * 1.9 }
+        ].forEach(layer => {
+          layer.ctx.save();
+          layer.ctx.globalCompositeOperation = 'destination-out';
+          layer.ctx.strokeStyle = 'rgba(0,0,0,1)';
+          layer.ctx.lineWidth = layer.width;
+          layer.ctx.lineCap = 'round';
+          layer.ctx.lineJoin = 'round';
+          layer.ctx.beginPath();
+          layer.ctx.moveTo(a.x, a.y);
+          layer.ctx.lineTo(b.x, b.y);
+          layer.ctx.stroke();
+          layer.ctx.restore();
+        });
       }
 
       function setTool(tool) {
@@ -1878,12 +2047,25 @@
         const reader = new FileReader();
         reader.onload = () => {
           state.baseImageData = reader.result;
+          state.baseImageVisible = true;
           state.baseImageRect = null;
           state.baseImageRectNorm = null;
           loadBaseImageFromState();
           broadcastState(true); 
         };
         reader.readAsDataURL(file);
+      }
+
+
+      function toggleBaseImageVisibility() {
+        if (!state.baseImageData) {
+          simpleToast('Primero carga una imagen');
+          return;
+        }
+        state.baseImageVisible = !state.baseImageVisible;
+        renderBase();
+        syncUiFromState();
+        broadcastState();
       }
 
       function clearArtwork() {
@@ -1990,10 +2172,8 @@
         togglePenPanel(true);
       });
 
-      quickAdjustBtn.addEventListener('click', () => {
-        toggleAdjustPanel();
-      });
-
+      quickUndoBtn.addEventListener('click', undo);
+      quickRedoBtn.addEventListener('click', redo);
       quickClearBtn.addEventListener('click', clearArtwork);
       quickSaveBtn.addEventListener('click', exportArtwork);
 
@@ -2020,9 +2200,8 @@
 
       document.addEventListener('pointerdown', event => {
         if (isProjection) return;
-        if (penDockRoot.contains(event.target) || toolbar.contains(event.target) || fabBar.contains(event.target)) return;
+        if (penDockRoot.contains(event.target) || toolbar.contains(event.target) || fabBar.contains(event.target) || adjustPanel.contains(event.target)) return;
         if (state.ui.penPanelOpen) togglePenPanel(false);
-        if (state.ui.adjustPanelOpen) toggleAdjustPanel(false);
       });
 
       loadImageBtn.addEventListener('click', () => imageInput.click());
@@ -2045,10 +2224,7 @@
       });
 
       clearBtn.addEventListener('click', clearArtwork);
-      clearFxBtn.addEventListener('click', () => {
-        clearCanvas(fxCtx, fxCanvas);
-        send({ type: 'clearFx' });
-      });
+      toggleImageBtn.addEventListener('click', toggleBaseImageVisibility);
       undoBtn.addEventListener('click', undo);
       redoBtn.addEventListener('click', redo);
 
@@ -2121,7 +2297,6 @@
 
       setPanelView(state.ui.panelView);
       togglePenPanel(false);
-      toggleAdjustPanel(false);
       syncUiFromState();
       resizeCanvases();
       blackBgBtn.classList.toggle('active', state.blackBg);
@@ -2137,7 +2312,7 @@
         connectRoom,
         toggleFullscreen,
         clearDraw: clearArtwork,
-        clearFx: () => clearFxBtn.click(),
+        toggleImage: toggleBaseImageVisibility,
         saveImage: exportArtwork,
       };
     })();
