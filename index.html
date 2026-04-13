@@ -461,36 +461,11 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 14;
-      width: min(860px, calc(100vw - 148px));
+      width: min(620px, calc(100vw - 148px));
       max-height: none;
       pointer-events: auto;
-      border-radius: 28px;
-      background: linear-gradient(180deg, rgba(16, 18, 27, 0.96), rgba(20, 24, 35, 0.94));
-      box-shadow: 0 18px 46px rgba(0,0,0,0.36);
-    }
-
-    .utility-popover-header {
-      padding: 16px 18px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .utility-popover-body {
-      padding: 12px;
-      overflow: auto;
-    }
-
-    .top-adjust-panel .utility-popover-header {
-      padding: 14px 18px 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .top-adjust-panel .utility-popover-body {
-      padding: 14px 16px 16px;
-      overflow: visible;
+      justify-content: center;
     }
 
     .pen-popover-header {
@@ -690,58 +665,70 @@
     }
 
     #strokeCard {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      gap: 10px;
       padding: 0;
       border: 0;
       background: transparent;
     }
 
     #strokeCard > label {
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: 20px;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.08);
-      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      background: linear-gradient(180deg, rgba(11, 14, 23, 0.92), rgba(18, 22, 34, 0.88));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 12px 28px rgba(0,0,0,0.24);
+      min-width: 0;
+    }
+
+    #strokeCard > label .value-line {
+      align-items: baseline;
     }
 
     #strokeCard > label .value-line span:first-child {
       color: var(--text);
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    #strokeCard > label .value-line span:last-child {
+      font-size: 11px;
+      color: var(--muted);
     }
 
     #strokeCard input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 8px;
+      height: 6px;
       border-radius: 999px;
-      background: linear-gradient(90deg, rgba(114,242,255,0.26), rgba(154,124,255,0.22));
-      border: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(90deg, rgba(114,242,255,0.22), rgba(154,124,255,0.18));
+      border: 1px solid rgba(255,255,255,0.05);
       outline: none;
     }
 
     #strokeCard input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.85);
+      border: 2px solid rgba(255,255,255,0.86);
       background: #dffcff;
-      box-shadow: 0 0 0 5px rgba(114,242,255,0.12), 0 4px 14px rgba(0,0,0,0.28);
+      box-shadow: 0 0 0 4px rgba(114,242,255,0.10), 0 4px 12px rgba(0,0,0,0.24);
       cursor: pointer;
     }
 
     #strokeCard input[type="range"]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.85);
+      border: 2px solid rgba(255,255,255,0.86);
       background: #dffcff;
-      box-shadow: 0 0 0 5px rgba(114,242,255,0.12), 0 4px 14px rgba(0,0,0,0.28);
+      box-shadow: 0 0 0 4px rgba(114,242,255,0.10), 0 4px 12px rgba(0,0,0,0.24);
       cursor: pointer;
     }
 
@@ -1014,30 +1001,21 @@
 
       </div>
 
-      <aside class="utility-popover top-adjust-panel" id="adjustPanel">
-        <div class="utility-popover-header">
-          <div class="pen-popover-title">
-            <strong>Ajustes rápidos</strong>
-            <span id="adjustReadout">Trazo activo</span>
-          </div>
-          <div class="group-title"><span>Siempre visible</span><span id="colorHexLabel">#72F2FF</span></div>
-        </div>
-        <div class="utility-popover-body">
-          <section class="pen-adjust-card" id="strokeCard">
-            <label>
-              <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
-              <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
-            </label>
-            <label>
-              <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
-              <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
-            </label>
-            <label>
-              <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
-              <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
-            </label>
-          </section>
-        </div>
+      <aside class="top-adjust-panel" id="adjustPanel">
+        <section class="pen-adjust-card" id="strokeCard">
+          <label>
+            <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
+            <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
+          </label>
+          <label>
+            <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
+            <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
+          </label>
+          <label>
+            <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
+            <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
+          </label>
+        </section>
       </aside>
 
 
@@ -1092,7 +1070,6 @@
       const colorsPanel = document.getElementById('colorsPanel');
       const panelTitle = document.getElementById('panelTitle');
       const adjustPanel = document.getElementById('adjustPanel');
-      const adjustReadout = document.getElementById('adjustReadout');
       const dockPositionButtons = document.querySelectorAll('.dock-pos-btn');
       const colorCard = document.getElementById('colorCard');
       const quickHideBtn = document.getElementById('quickHideBtn');
@@ -1104,7 +1081,6 @@
       const statusText = document.getElementById('statusText');
       const toolReadout = document.getElementById('toolReadout');
       const colorInput = document.getElementById('colorInput');
-      const colorHexLabel = document.getElementById('colorHexLabel');
       const sizeInput = document.getElementById('sizeInput');
       const alphaInput = document.getElementById('alphaInput');
       const glowInput = document.getElementById('glowInput');
@@ -1154,13 +1130,32 @@
         projectionUi.classList.add('hidden-in-projection');
       }
 
+      const DEFAULT_TOOL_PROFILES = {
+        brush: { color: '#72f2ff', size: 12, alpha: 1, glow: 0.12, label: 'Bolígrafo' },
+        eraser: { color: '#72f2ff', size: 24, alpha: 1, glow: 0, label: 'Borrador rápido' },
+        neon: { color: '#72f2ff', size: 18, alpha: 0.96, glow: 0.72, label: 'Neón' },
+        spray: { color: '#72f2ff', size: 28, alpha: 0.28, glow: 0.12, label: 'Aerógrafo suave' }
+      };
+
+      const TOOL_PROFILE_KEYS = {
+        brush: 'brush',
+        eraser: 'eraser',
+        neon: 'neon',
+        spray: 'spray'
+      };
+
+      function cloneToolProfiles(source = DEFAULT_TOOL_PROFILES) {
+        return Object.fromEntries(Object.entries(source).map(([key, value]) => [key, { ...value }]));
+      }
+
       const state = {
         roomId: initialRoom || '',
         tool: 'brush',
-        color: '#72f2ff',
-        size: 12,
-        alpha: 1,
-        glow: 0.7,
+        color: DEFAULT_TOOL_PROFILES.brush.color,
+        size: DEFAULT_TOOL_PROFILES.brush.size,
+        alpha: DEFAULT_TOOL_PROFILES.brush.alpha,
+        glow: DEFAULT_TOOL_PROFILES.brush.glow,
+        toolProfiles: cloneToolProfiles(),
         blackBg: true,
         baseImageVisible: true,
         baseImageData: null,
@@ -1200,8 +1195,51 @@
         state.ui.activePresetLabel = localStorage.getItem('penActivePresetLabel') || 'Bolígrafo';
       } catch (_) {}
 
+      loadToolProfile(state.tool);
+
       function clamp(value, min, max) {
         return Math.min(max, Math.max(min, value));
+      }
+
+      function getProfileKey(tool = state.tool) {
+        return TOOL_PROFILE_KEYS[tool] || 'brush';
+      }
+
+      function ensureToolProfile(tool = state.tool) {
+        const key = getProfileKey(tool);
+        if (!state.toolProfiles[key]) {
+          state.toolProfiles[key] = { ...(DEFAULT_TOOL_PROFILES[key] || DEFAULT_TOOL_PROFILES.brush) };
+        }
+        return state.toolProfiles[key];
+      }
+
+      function normalizeToolProfiles(profiles) {
+        const next = cloneToolProfiles();
+        if (!profiles || typeof profiles !== 'object') return next;
+        Object.keys(next).forEach(key => {
+          if (profiles[key] && typeof profiles[key] === 'object') {
+            next[key] = { ...next[key], ...profiles[key] };
+          }
+        });
+        return next;
+      }
+
+      function saveCurrentToolProfile() {
+        const profile = ensureToolProfile(state.tool);
+        profile.size = state.size;
+        profile.alpha = state.alpha;
+        profile.glow = state.glow;
+        profile.color = state.color;
+        profile.label = state.ui.activePresetLabel || profile.label || DEFAULT_TOOL_PROFILES[getProfileKey(state.tool)].label;
+      }
+
+      function loadToolProfile(tool = state.tool) {
+        const profile = ensureToolProfile(tool);
+        state.size = Number(profile.size ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)].size);
+        state.alpha = Number(profile.alpha ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)].alpha);
+        state.glow = Number(profile.glow ?? DEFAULT_TOOL_PROFILES[getProfileKey(tool)].glow);
+        if (profile.color) state.color = profile.color;
+        state.ui.activePresetLabel = profile.label || DEFAULT_TOOL_PROFILES[getProfileKey(tool)].label;
       }
 
       function persistUiState() {
@@ -1338,11 +1376,17 @@
 
       function applyToolPreset(button) {
         if (!button) return;
-        if (button.dataset.size) state.size = Number(button.dataset.size);
-        if (button.dataset.alpha) state.alpha = Number(button.dataset.alpha);
-        if (button.dataset.glow) state.glow = Number(button.dataset.glow);
-        if (button.dataset.color) state.color = button.dataset.color;
-        state.ui.activePresetLabel = button.dataset.label || button.title || '';
+        const targetTool = button.dataset.tool || state.tool;
+        const profile = ensureToolProfile(targetTool);
+        if (button.dataset.size) profile.size = Number(button.dataset.size);
+        if (button.dataset.alpha) profile.alpha = Number(button.dataset.alpha);
+        if (button.dataset.glow) profile.glow = Number(button.dataset.glow);
+        if (button.dataset.color) profile.color = button.dataset.color;
+        profile.label = button.dataset.label || button.title || profile.label;
+
+        if (targetTool === state.tool) {
+          loadToolProfile(targetTool);
+        }
       }
 
 
@@ -1382,7 +1426,6 @@
 
       function syncUiFromState() {
         colorInput.value = state.color;
-        colorHexLabel.textContent = state.color.toUpperCase();
         sizeInput.value = state.size;
         alphaInput.value = state.alpha;
         glowInput.value = state.glow;
@@ -1392,9 +1435,6 @@
         toolReadout.textContent = state.ui.panelView === 'colors'
           ? 'Paleta y muestras'
           : (state.ui.activePresetLabel || state.tool);
-        adjustReadout.textContent = state.tool === 'eraser'
-          ? 'Borrador'
-          : (state.ui.activePresetLabel || 'Trazo');
         toggleImageBtn.textContent = state.baseImageVisible ? 'Ocultar imagen' : 'Mostrar imagen';
         toggleImageBtn.classList.toggle('active', !state.baseImageVisible);
         document.querySelectorAll('.tool-btn').forEach(btn => {
@@ -1403,7 +1443,7 @@
         roomReadout.textContent = 'Sala: ' + (state.roomId || '—');
         quickPaletteBtn.style.color = state.color;
 
-        const pointerSize = Math.max(8, state.size * (state.tool === 'eraser' ? 1.25 : 1)); 
+        const pointerSize = Math.max(8, state.size * (state.tool === 'eraser' ? 1.25 : 1));
         crosshair.style.width = pointerSize + 'px';
         crosshair.style.height = pointerSize + 'px';
 
@@ -1592,12 +1632,15 @@
 
         state.baseImageRectNorm = rectNorm || null;
 
+        saveCurrentToolProfile();
+
         const payload = {
           tool: state.tool,
           color: state.color,
           size: state.size,
           alpha: state.alpha,
           glow: state.glow,
+          toolProfiles: state.toolProfiles,
           blackBg: state.blackBg,
           baseImageVisible: state.baseImageVisible,
           baseImageRectNorm: state.baseImageRectNorm,
@@ -1623,9 +1666,13 @@
         switch (msg.type) {
           case 'state': {
             const oldImageData = state.baseImageData;
-            Object.assign(state, msg.payload || {});
+            const payload = msg.payload || {};
+            const incomingProfiles = normalizeToolProfiles(payload.toolProfiles);
 
-            if (msg.payload && 'baseImageData' in msg.payload && oldImageData !== state.baseImageData) {
+            Object.assign(state, { ...payload, toolProfiles: incomingProfiles });
+            loadToolProfile(state.tool);
+
+            if ('baseImageData' in payload && oldImageData !== state.baseImageData) {
               loadBaseImageFromState();
             } else {
               renderBase();
@@ -1917,29 +1964,32 @@
 
       function neonSegment(a, b, stroke) {
         const glowStrength = clamp(stroke.glow, 0, 1);
-        const haloAlpha = Math.max(0.16, stroke.alpha * (0.22 + glowStrength * 0.22));
-        const outerBlur = stroke.size * (2.6 + glowStrength * 2.8);
-        const innerBlur = stroke.size * (0.9 + glowStrength * 1.4);
+        const haloWidth = stroke.size * (1.85 + glowStrength * 0.55);
+        const outerBlur = stroke.size * (2.2 + glowStrength * 2.8);
+        const midBlur = stroke.size * (0.8 + glowStrength * 1.35);
+        const bodyAlpha = Math.min(0.96, 0.58 + glowStrength * 0.18) * stroke.alpha;
+        const highlightAlpha = Math.min(0.58, 0.24 + glowStrength * 0.18) * stroke.alpha;
 
         fxCtx.save();
-        fxCtx.globalCompositeOperation = 'lighter';
+        fxCtx.globalCompositeOperation = 'screen';
         fxCtx.lineCap = 'round';
         fxCtx.lineJoin = 'round';
-        fxCtx.strokeStyle = rgba(stroke.color, haloAlpha);
-        fxCtx.lineWidth = stroke.size * (1.9 + glowStrength * 0.35);
+
+        fxCtx.strokeStyle = rgba(stroke.color, 0.16 + glowStrength * 0.14);
+        fxCtx.lineWidth = haloWidth * 1.45;
         fxCtx.shadowColor = rgba(stroke.color, 1);
         fxCtx.shadowBlur = outerBlur;
         fxCtx.beginPath();
         fxCtx.moveTo(a.x, a.y);
-        fxCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        fxCtx.lineTo(b.x, b.y);
         fxCtx.stroke();
 
-        fxCtx.strokeStyle = rgba(stroke.color, Math.min(0.95, haloAlpha + 0.1));
-        fxCtx.lineWidth = stroke.size * 1.18;
-        fxCtx.shadowBlur = innerBlur;
+        fxCtx.strokeStyle = rgba(stroke.color, 0.22 + glowStrength * 0.16);
+        fxCtx.lineWidth = haloWidth;
+        fxCtx.shadowBlur = midBlur;
         fxCtx.beginPath();
         fxCtx.moveTo(a.x, a.y);
-        fxCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        fxCtx.lineTo(b.x, b.y);
         fxCtx.stroke();
         fxCtx.restore();
 
@@ -1947,18 +1997,19 @@
         drawCtx.globalCompositeOperation = 'source-over';
         drawCtx.lineCap = 'round';
         drawCtx.lineJoin = 'round';
-        drawCtx.strokeStyle = rgba(stroke.color, Math.min(1, stroke.alpha * 0.96));
-        drawCtx.lineWidth = Math.max(1.6, stroke.size * 0.72);
+
+        drawCtx.strokeStyle = rgba(stroke.color, bodyAlpha);
+        drawCtx.lineWidth = Math.max(1.5, stroke.size * 0.56);
         drawCtx.beginPath();
         drawCtx.moveTo(a.x, a.y);
-        drawCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        drawCtx.lineTo(b.x, b.y);
         drawCtx.stroke();
 
-        drawCtx.strokeStyle = `rgba(255,255,255,${Math.min(1, stroke.alpha * 0.92)})`;
-        drawCtx.lineWidth = Math.max(1, stroke.size * 0.26);
+        drawCtx.strokeStyle = `rgba(255,255,255,${highlightAlpha.toFixed(3)})`;
+        drawCtx.lineWidth = Math.max(0.9, stroke.size * 0.12);
         drawCtx.beginPath();
         drawCtx.moveTo(a.x, a.y);
-        drawCtx.quadraticCurveTo(a.x, a.y, b.x, b.y);
+        drawCtx.lineTo(b.x, b.y);
         drawCtx.stroke();
         drawCtx.restore();
       }
@@ -2007,9 +2058,11 @@
       }
 
       function setTool(tool) {
+        saveCurrentToolProfile();
         state.tool = tool;
+        loadToolProfile(tool);
         syncUiFromState();
-        broadcastState(); 
+        broadcastState();
       }
 
       function toggleToolbar() {
@@ -2120,38 +2173,55 @@
 
       colorInput.addEventListener('input', () => {
         state.color = colorInput.value;
+        const profile = ensureToolProfile(state.tool);
+        profile.color = state.color;
+        state.ui.activePresetLabel = '';
+        profile.label = '';
         syncUiFromState();
         broadcastState();
       });
       sizeInput.addEventListener('input', () => {
         state.size = Number(sizeInput.value);
+        const profile = ensureToolProfile(state.tool);
+        profile.size = state.size;
         state.ui.activePresetLabel = '';
+        profile.label = '';
         syncUiFromState();
         broadcastState();
       });
       alphaInput.addEventListener('input', () => {
         state.alpha = Number(alphaInput.value);
+        const profile = ensureToolProfile(state.tool);
+        profile.alpha = state.alpha;
         state.ui.activePresetLabel = '';
+        profile.label = '';
         syncUiFromState();
         broadcastState();
       });
       glowInput.addEventListener('input', () => {
         state.glow = Number(glowInput.value);
+        const profile = ensureToolProfile(state.tool);
+        profile.glow = state.glow;
         state.ui.activePresetLabel = '';
+        profile.label = '';
         syncUiFromState();
         broadcastState();
       });
 
       document.querySelectorAll('.brush-preset.tool-btn').forEach(btn => btn.addEventListener('click', () => {
-        applyToolPreset(btn);
         setTool(btn.dataset.tool);
+        applyToolPreset(btn);
+        syncUiFromState();
+        broadcastState();
         setPanelView('brushes');
         togglePenPanel(true);
       }));
 
       document.querySelectorAll('.quick-tool-btn.tool-btn').forEach(btn => btn.addEventListener('click', () => {
-        applyToolPreset(btn);
         setTool(btn.dataset.tool);
+        applyToolPreset(btn);
+        syncUiFromState();
+        broadcastState();
       }));
 
       penMenuToggle.addEventListener('click', () => {
