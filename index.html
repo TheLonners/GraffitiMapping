@@ -54,7 +54,6 @@
       touch-action: none;
     }
 
-    /* CORRECCIÓN 1: Dejar que los toques atraviesen las capas base y fx para llegar al drawCanvas */
     #fxCanvas, #baseCanvas {
       pointer-events: none;
     }
@@ -98,6 +97,7 @@
       position: absolute; inset: 0; display: flex; z-index: 8; pointer-events: none;
     }
 
+    /* MENÚ IZQUIERDO: Configuraciones (ocultable) */
     .toolbar {
       width: min(var(--toolbar-w), calc(100vw - 24px));
       margin: 84px 0 16px 16px;
@@ -114,6 +114,26 @@
     .toolbar.hidden {
       transform: translateX(calc(-100% - 24px));
       opacity: 0.06;
+    }
+
+    /* MENÚ DERECHO: Herramientas (Fijo) */
+    .tools-panel {
+      position: absolute;
+      right: 16px;
+      top: 84px;
+      width: min(340px, calc(100vw - 24px));
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      display: flex; 
+      flex-direction: column;
+      pointer-events: auto;
+      padding: 14px;
+      gap: 12px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
     }
 
     .toolbar-header {
@@ -169,9 +189,7 @@
       gap: 10px;
     }
 
-    button, .button, input, select {
-      font: inherit;
-    }
+    button, .button, input, select { font: inherit; }
 
     button, .button {
       height: var(--btn-h);
@@ -267,19 +285,381 @@
     }
 
     .crosshair {
-      position: absolute; width: 14px; height: 14px; border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.5);
-      box-shadow: 0 0 20px rgba(114,242,255,0.4);
+      position: absolute; 
+      /* Valores iniciales, se actualizan en JS */
+      width: 14px; height: 14px; 
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: 0 0 10px rgba(114,242,255,0.5);
       pointer-events: none;
       z-index: 7;
       transform: translate(-50%, -50%);
       display: none;
     }
 
+    .pen-dock-root {
+      position: absolute;
+      top: 96px;
+      right: 16px;
+      z-index: 13;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      pointer-events: auto;
+      user-select: none;
+    }
+
+    .pen-dock-root[data-side="left"] {
+      flex-direction: row;
+    }
+
+    .pen-dock-root[data-side="right"] {
+      flex-direction: row-reverse;
+    }
+
+    .pen-dock-root[data-side="top"] {
+      flex-direction: column;
+    }
+
+    .pen-dock-root[data-side="bottom"] {
+      flex-direction: column-reverse;
+    }
+
+    .pen-dock-root.is-dragging {
+      transition: none;
+    }
+
+
+    .pen-dock {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 28px;
+      background: rgba(10, 12, 18, 0.78);
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+      min-width: 76px;
+      align-items: center;
+    }
+
+    .pen-dock-root[data-side="top"] .pen-dock,
+    .pen-dock-root[data-side="bottom"] .pen-dock {
+      flex-direction: row;
+      min-width: unset;
+      min-height: 76px;
+      padding: 10px 12px;
+    }
+
+    .dock-handle,
+    .dock-main {
+      width: 54px;
+      height: 54px;
+      min-width: 54px;
+      min-height: 54px;
+      padding: 0;
+      border-radius: 18px;
+      font-size: 20px;
+    }
+
+    .dock-handle {
+      letter-spacing: 2px;
+      color: var(--muted);
+      cursor: grab;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .pen-dock-root.is-dragging .dock-handle {
+      cursor: grabbing;
+    }
+
+    .dock-main {
+      position: relative;
+      overflow: hidden;
+      color: var(--text);
+    }
+
+    .dock-main::after {
+      content: "";
+      position: absolute;
+      inset: auto 10px 8px;
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(114,242,255,0.2), rgba(154,124,255,0.2));
+      opacity: 0;
+      transition: opacity 140ms ease;
+    }
+
+    .dock-main.active::after,
+    .dock-main:hover::after {
+      opacity: 1;
+    }
+
+    .dock-main svg,
+    .panel-view-btn svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      pointer-events: none;
+    }
+
+    #quickPaletteBtn {
+      color: var(--accent);
+    }
+
+    .pen-popover {
+      width: min(430px, calc(100vw - 32px));
+      max-height: min(78vh, 860px);
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(18, 20, 28, 0.97), rgba(23, 26, 36, 0.96));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pen-popover.is-collapsed {
+      display: none;
+    }
+
+    .pen-popover-header {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pen-popover-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .pen-popover-title strong {
+      font-size: 18px;
+      letter-spacing: 0.01em;
+    }
+
+    .pen-popover-title span {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .pen-popover-actions {
+      display: grid;
+      gap: 10px;
+      justify-items: end;
+    }
+
+    .panel-view-switch {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 4px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .panel-view-btn {
+      min-width: 108px;
+      height: 40px;
+      min-height: 40px;
+      border-radius: 12px;
+      padding: 0 12px;
+      font-size: 13px;
+      gap: 8px;
+    }
+
+    .dock-position-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .dock-pos-btn {
+      width: 38px;
+      min-width: 38px;
+      height: 38px;
+      min-height: 38px;
+      border-radius: 12px;
+      padding: 0;
+      font-size: 15px;
+    }
+
+    .pen-popover-body {
+      min-height: 0;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    .panel-view {
+      display: none;
+      overflow: auto;
+      gap: 12px;
+      max-height: calc(min(78vh, 860px) - 112px);
+      padding-right: 4px;
+    }
+
+    .panel-view.is-active {
+      display: grid;
+    }
+
+    .brush-library {
+      display: grid;
+      gap: 12px;
+    }
+
+    .brush-group-label {
+      margin: 0;
+      padding: 0 2px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .brush-preset {
+      height: auto;
+      min-height: 68px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      display: grid;
+      justify-content: start;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.03);
+      text-align: left;
+    }
+
+    .brush-preset-name {
+      font-size: 15px;
+      text-align: left;
+      justify-self: start;
+    }
+
+    .brush-stroke {
+      display: block;
+      width: 100%;
+      height: 20px;
+      opacity: 0.95;
+      position: relative;
+    }
+
+    .brush-stroke::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 100% 100%;
+    }
+
+    .brush-stroke--thin::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 24'%3E%3Cpath d='M6 14 C 48 13, 94 10, 138 15 S 196 15, 214 13' stroke='%23ffffff' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .brush-stroke--medium::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 24'%3E%3Cpath d='M6 14 C 48 14, 82 9, 136 14 S 190 18, 214 12' stroke='%23ffffff' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    .brush-stroke--neon::before,
+    .brush-stroke--neon-strong::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 28'%3E%3Cdefs%3E%3Cfilter id='g'%3E%3CfeGaussianBlur stdDeviation='3'/%3E%3C/filter%3E%3C/defs%3E%3Cpath d='M8 16 C 54 13, 89 9, 140 16 S 192 19, 212 12' stroke='%2372f2ff' stroke-width='8' stroke-linecap='round' fill='none' filter='url(%23g)' opacity='0.75'/%3E%3Cpath d='M8 16 C 54 13, 89 9, 140 16 S 192 19, 212 12' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+    }
+
+    .brush-stroke--spray::before {
+      background-image: radial-gradient(circle at 15% 50%, rgba(255,255,255,0.7) 0 1px, transparent 1.5px),
+                        radial-gradient(circle at 28% 35%, rgba(255,255,255,0.55) 0 1px, transparent 1.5px),
+                        radial-gradient(circle at 40% 55%, rgba(255,255,255,0.45) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 58% 42%, rgba(255,255,255,0.6) 0 1px, transparent 2px),
+                        radial-gradient(circle at 74% 58%, rgba(255,255,255,0.45) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 88% 45%, rgba(255,255,255,0.65) 0 1px, transparent 2px);
+    }
+
+    .brush-stroke--spray-wide::before {
+      background-image: radial-gradient(circle at 12% 50%, rgba(255,255,255,0.65) 0 1px, transparent 2px),
+                        radial-gradient(circle at 22% 28%, rgba(255,255,255,0.45) 0 1px, transparent 2px),
+                        radial-gradient(circle at 35% 62%, rgba(255,255,255,0.35) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 48% 38%, rgba(255,255,255,0.55) 0 1px, transparent 2px),
+                        radial-gradient(circle at 60% 57%, rgba(255,255,255,0.4) 0 1px, transparent 2px),
+                        radial-gradient(circle at 75% 35%, rgba(255,255,255,0.5) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 90% 52%, rgba(255,255,255,0.75) 0 1px, transparent 2px);
+    }
+
+    .brush-stroke--eraser-thin::before,
+    .brush-stroke--eraser-wide::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 26'%3E%3Cpath d='M10 16 C 46 16, 88 13, 126 16 S 184 17, 210 13' stroke='%238a93a6' stroke-width='6' fill='none' stroke-linecap='round' opacity='0.8'/%3E%3C/svg%3E");
+      opacity: 0.65;
+    }
+
+    .brush-stroke--eraser-wide::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 26'%3E%3Cpath d='M10 16 C 46 16, 88 13, 126 16 S 184 17, 210 13' stroke='%238a93a6' stroke-width='11' fill='none' stroke-linecap='round' opacity='0.8'/%3E%3C/svg%3E");
+    }
+
+    .pen-adjust-card {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .pen-adjust-card input[type="color"] {
+      width: 100%;
+      height: 54px;
+    }
+
+    .pen-adjust-card .chips {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .pen-dock-root[data-side="right"] .pen-popover,
+    .pen-dock-root[data-side="left"] .pen-popover {
+      width: min(430px, calc(100vw - 112px));
+    }
+
+    @media (max-width: 900px) {
+      .pen-popover {
+        width: min(430px, calc(100vw - 24px));
+      }
+
+      .pen-popover-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pen-popover-actions {
+        justify-items: stretch;
+      }
+
+      .panel-view-switch {
+        width: 100%;
+      }
+
+      .panel-view-btn {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .toolbar {
     @media (max-width: 900px) {
       .toolbar {
         width: calc(100vw - 24px);
         margin-right: 12px;
+      }
+      .tools-panel {
+        top: auto;
+        bottom: 84px;
+        right: 16px;
       }
       .row, .row-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
@@ -300,6 +680,7 @@
     </div>
 
     <div class="shell" id="controlShell">
+      
       <aside class="toolbar" id="toolbar">
         <div class="toolbar-header">
           <div class="brand">
@@ -324,37 +705,7 @@
               <button id="copyProjectionLinkBtn">Copiar link proyección</button>
               <button id="fullscreenBtn">Pantalla completa</button>
             </div>
-            <div class="hint">Abre este archivo en ambos dispositivos. En la tablet usa <strong>?mode=control</strong> y en el computador <strong>?mode=projection</strong> con el mismo room.</div>
-          </section>
-
-          <section class="group">
-            <div class="group-title"><span>Herramientas</span><span id="toolReadout">brush</span></div>
-            <div class="row-3">
-              <button class="tool-btn active" data-tool="brush">Brush</button>
-              <button class="tool-btn" data-tool="neon">Neon</button>
-              <button class="tool-btn" data-tool="spray">Spray</button>
-              <button class="tool-btn" data-tool="ribbon">Ribbon</button>
-              <button class="tool-btn" data-tool="eraser">Borrador</button>
-              <button id="spotlightBtn">Spotlight</button>
-            </div>
-          </section>
-
-          <section class="group">
-            <div class="group-title"><span>Color y trazo</span><span id="colorHexLabel">#72f2ff</span></div>
-            <input type="color" id="colorInput" value="#72f2ff" />
-            <div class="chips" id="paletteChips"></div>
-            <label>
-              <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
-              <input type="range" id="sizeInput" min="1" max="80" step="1" value="12" />
-            </label>
-            <label>
-              <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
-              <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
-            </label>
-            <label>
-              <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
-              <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
-            </label>
+            <div class="hint">Abre este archivo en ambos dispositivos. En la tablet usa <strong>?mode=control</strong> y en el computador <strong>?mode=projection</strong>.</div>
           </section>
 
           <section class="group">
@@ -380,11 +731,157 @@
               <button id="toggleHudBtn">Ocultar HUD</button>
               <button id="blackBgBtn">Fondo negro</button>
             </div>
-            <div class="hint">En el computador deja solo Projection Mode a pantalla completa y captura esa ventana en OBS.</div>
           </section>
         </div>
       </aside>
-    </div>
+
+
+      <div class="pen-dock-root" id="penDockRoot" data-side="right">
+        <div class="pen-dock" id="penDock">
+          <button class="dock-handle" id="dockHandle" title="Arrastra para mover el menú">⋮⋮</button>
+
+          <button class="dock-main" id="penMenuToggle" title="Abrir biblioteca de pinceles" aria-label="Abrir biblioteca de pinceles">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 4.5 19.5 9"></path>
+              <path d="M4 20l4.7-1 8.8-8.8a2.8 2.8 0 1 0-4-4L4.7 15 4 20Z"></path>
+              <path d="M12 6l6 6"></path>
+            </svg>
+          </button>
+
+          <button class="dock-main tool-btn active" data-tool="brush" data-label="Bolígrafo rápido" data-size="12" data-alpha="1" data-glow="0.12" title="Bolígrafo rápido" aria-label="Bolígrafo rápido">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 20l5.2-1.1L18 10.1a2.6 2.6 0 0 0-3.7-3.7L5.5 15.2 4 20Z"></path>
+              <path d="M13 7l4 4"></path>
+            </svg>
+          </button>
+
+          <button class="dock-main tool-btn" data-tool="eraser" data-label="Borrador rápido" data-size="24" data-alpha="1" data-glow="0" title="Borrador rápido" aria-label="Borrador rápido">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15.5 4.5 21 10a2 2 0 0 1 0 2.8l-6.2 6.2a2 2 0 0 1-1.4.6H7.9a2 2 0 0 1-1.4-.6L3 15.5a2 2 0 0 1 0-2.8l8.7-8.7a2 2 0 0 1 2.8 0Z"></path>
+              <path d="M8 19.5h11"></path>
+            </svg>
+          </button>
+
+          <button class="dock-main" id="quickPaletteBtn" title="Abrir paleta de colores" aria-label="Abrir paleta de colores">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3a9 9 0 1 0 0 18h1.4a2.6 2.6 0 0 0 0-5.2h-.5a1.7 1.7 0 0 1 0-3.4H15A4 4 0 0 0 15 4h-3Z"></path>
+              <circle cx="7.5" cy="11" r="1"></circle>
+              <circle cx="10" cy="7.5" r="1"></circle>
+              <circle cx="15.5" cy="8.5" r="1"></circle>
+            </svg>
+          </button>
+        </div>
+
+        <aside class="pen-popover" id="toolsPanel">
+          <div class="pen-popover-header">
+            <div class="pen-popover-title">
+              <strong id="panelTitle">Pinceles</strong>
+              <span id="toolReadout">Bolígrafo</span>
+            </div>
+
+            <div class="pen-popover-actions">
+              <div class="panel-view-switch">
+                <button class="panel-view-btn active" id="brushPanelViewBtn" title="Ver pinceles">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 4.5 19.5 9"></path>
+                    <path d="M4 20l4.7-1 8.8-8.8a2.8 2.8 0 1 0-4-4L5 15.1 4 20Z"></path>
+                    <path d="M12 6l6 6"></path>
+                  </svg>
+                  <span>Pinceles</span>
+                </button>
+                <button class="panel-view-btn" id="colorPanelViewBtn" title="Ver colores">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3a9 9 0 1 0 0 18h1.4a2.6 2.6 0 0 0 0-5.2h-.5a1.7 1.7 0 0 1 0-3.4H15A4 4 0 0 0 15 4h-3Z"></path>
+                    <circle cx="7.5" cy="11" r="1"></circle>
+                    <circle cx="10" cy="7.5" r="1"></circle>
+                    <circle cx="15.5" cy="8.5" r="1"></circle>
+                  </svg>
+                  <span>Color</span>
+                </button>
+              </div>
+
+              <div class="dock-position-group">
+                <button class="dock-pos-btn" data-side="left" id="dockLeftBtn" title="Acoplar a la izquierda">←</button>
+                <button class="dock-pos-btn" data-side="right" id="dockRightBtn" title="Acoplar a la derecha">→</button>
+                <button class="dock-pos-btn" data-side="top" id="dockTopBtn" title="Acoplar arriba">↑</button>
+                <button class="dock-pos-btn" data-side="bottom" id="dockBottomBtn" title="Acoplar abajo">↓</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pen-popover-body">
+            <div class="panel-view is-active" id="brushesPanel">
+              <div class="brush-library">
+                <p class="brush-group-label">Tinta</p>
+
+                <button class="brush-preset tool-btn active" data-tool="brush" data-label="Bolígrafo" data-size="8" data-alpha="1" data-glow="0.08">
+                  <span class="brush-preset-name">Bolígrafo</span>
+                  <span class="brush-stroke brush-stroke--thin"></span>
+                </button>
+
+                <button class="brush-preset tool-btn" data-tool="brush" data-label="Pluma de inmersión" data-size="12" data-alpha="0.94" data-glow="0.12">
+                  <span class="brush-preset-name">Pluma de inmersión</span>
+                  <span class="brush-stroke brush-stroke--medium"></span>
+                </button>
+
+                <p class="brush-group-label">Efectos</p>
+
+                <button class="brush-preset tool-btn" data-tool="neon" data-label="Neón" data-size="18" data-alpha="1" data-glow="1">
+                  <span class="brush-preset-name">Neón</span>
+                  <span class="brush-stroke brush-stroke--neon-strong"></span>
+                </button>
+
+                <button class="brush-preset tool-btn" data-tool="spray" data-label="Aerógrafo suave" data-size="28" data-alpha="0.28" data-glow="0.1">
+                  <span class="brush-preset-name">Aerógrafo suave</span>
+                  <span class="brush-stroke brush-stroke--spray"></span>
+                </button>
+
+                <button class="brush-preset tool-btn" data-tool="spray" data-label="Niebla densa" data-size="40" data-alpha="0.18" data-glow="0.2">
+                  <span class="brush-preset-name">Niebla densa</span>
+                  <span class="brush-stroke brush-stroke--spray-wide"></span>
+                </button>
+
+                <p class="brush-group-label">Borrador</p>
+
+                <button class="brush-preset tool-btn" data-tool="eraser" data-label="Borrador fino" data-size="20" data-alpha="1" data-glow="0">
+                  <span class="brush-preset-name">Borrador fino</span>
+                  <span class="brush-stroke brush-stroke--eraser-thin"></span>
+                </button>
+
+                <button class="brush-preset tool-btn" data-tool="eraser" data-label="Borrador ancho" data-size="46" data-alpha="1" data-glow="0">
+                  <span class="brush-preset-name">Borrador ancho</span>
+                  <span class="brush-stroke brush-stroke--eraser-wide"></span>
+                </button>
+              </div>
+
+              <section class="pen-adjust-card" id="strokeCard">
+                <div class="group-title"><span>Trazo</span><span id="colorHexLabel">#72f2ff</span></div>
+                <label>
+                  <div class="value-line"><span>Grosor</span><span id="sizeValue">12 px</span></div>
+                  <input type="range" id="sizeInput" min="1" max="150" step="1" value="12" />
+                </label>
+                <label>
+                  <div class="value-line"><span>Opacidad</span><span id="alphaValue">1.00</span></div>
+                  <input type="range" id="alphaInput" min="0.05" max="1" step="0.01" value="1" />
+                </label>
+                <label>
+                  <div class="value-line"><span>Glow</span><span id="glowValue">0.70</span></div>
+                  <input type="range" id="glowInput" min="0" max="1" step="0.01" value="0.7" />
+                </label>
+              </section>
+            </div>
+
+            <div class="panel-view" id="colorsPanel">
+              <section class="pen-adjust-card" id="colorCard">
+                <div class="group-title"><span>Color</span><span>Muestras</span></div>
+                <input type="color" id="colorInput" value="#72f2ff" />
+                <div class="chips" id="paletteChips"></div>
+              </section>
+            </div>
+          </div>
+        </aside>
+      </div>
+
 
     <div class="footer-fab" id="fabBar">
       <button class="mini" id="quickHideBtn" title="Mostrar/ocultar panel">☰</button>
@@ -423,6 +920,19 @@
       const projectionHudBtn = document.getElementById('projectionHudBtn');
       const toggleToolbarBtn = document.getElementById('toggleToolbarBtn');
       const toolbar = document.getElementById('toolbar');
+      const penDockRoot = document.getElementById('penDockRoot');
+      const penDock = document.getElementById('penDock');
+      const toolsPanel = document.getElementById('toolsPanel');
+      const penMenuToggle = document.getElementById('penMenuToggle');
+      const dockHandle = document.getElementById('dockHandle');
+      const quickPaletteBtn = document.getElementById('quickPaletteBtn');
+      const brushPanelViewBtn = document.getElementById('brushPanelViewBtn');
+      const colorPanelViewBtn = document.getElementById('colorPanelViewBtn');
+      const brushesPanel = document.getElementById('brushesPanel');
+      const colorsPanel = document.getElementById('colorsPanel');
+      const panelTitle = document.getElementById('panelTitle');
+      const dockPositionButtons = document.querySelectorAll('.dock-pos-btn');
+      const colorCard = document.getElementById('colorCard');
       const quickHideBtn = document.getElementById('quickHideBtn');
       const quickFullscreenBtn = document.getElementById('quickFullscreenBtn');
       const modeLabel = document.getElementById('modeLabel');
@@ -453,7 +963,9 @@
       const toggleHudBtn = document.getElementById('toggleHudBtn');
       const blackBgBtn = document.getElementById('blackBgBtn');
       const hud = document.getElementById('hud');
-      const spotlightBtn = document.getElementById('spotlightBtn');
+
+      // Evitar que el clic derecho del S-Pen abra el menú del navegador
+      drawCanvas.addEventListener('contextmenu', e => e.preventDefault());
 
       const palette = ['#72f2ff', '#ffffff', '#ff4d8d', '#9a7cff', '#2dfc98', '#ffd166', '#ff7b00', '#00e5ff', '#f4f4f4', '#e91e63'];
       palette.forEach(color => {
@@ -464,7 +976,7 @@
         chip.addEventListener('click', () => {
           state.color = color;
           syncUiFromState();
-          broadcastState(); // No enviamos imagen
+          broadcastState(); 
         });
         paletteChips.appendChild(chip);
       });
@@ -472,6 +984,7 @@
       modeLabel.textContent = isProjection ? 'PROJECTION MODE' : 'CONTROL MODE';
       peerRoleLabel.textContent = isProjection ? 'Projection' : 'Control';
       roomInput.value = initialRoom;
+      
       if (isProjection) {
         controlShell.classList.add('hidden-in-projection');
         fabBar.classList.add('hidden-in-projection');
@@ -487,7 +1000,6 @@
         alpha: 1,
         glow: 0.7,
         blackBg: true,
-        spotlight: false,
         baseImageData: null,
         baseImageObject: null,
         baseImageRect: null,
@@ -496,23 +1008,216 @@
         redo: [],
         pointerDown: false,
         activeStroke: null,
+
+        // Variables para soporte temporal del S-Pen
+        isStylusEraser: false,
+        previousTool: null,
+
+        ui: {
+          dockSide: 'right',
+          dockOffset: 96,
+          penPanelOpen: true,
+          panelView: 'brushes',
+          activePresetLabel: 'Bolígrafo',
+          isDockDragging: false
+        }
       };
 
       let peer = null;
       let conn = null;
       let peerOpen = false;
       let reconnectTimer = null;
+      let dockDrag = null;
 
+      try {
+        state.ui.dockSide = localStorage.getItem('penDockSide') || 'right';
+        state.ui.dockOffset = Number(localStorage.getItem('penDockOffset') || 96);
+        state.ui.penPanelOpen = localStorage.getItem('penPanelOpen') !== '0';
+        state.ui.panelView = localStorage.getItem('penPanelView') || 'brushes';
+        state.ui.activePresetLabel = localStorage.getItem('penActivePresetLabel') || 'Bolígrafo';
+      } catch (_) {}
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function persistUiState() {
+        try {
+          localStorage.setItem('penDockSide', state.ui.dockSide);
+          localStorage.setItem('penDockOffset', String(Math.round(state.ui.dockOffset)));
+          localStorage.setItem('penPanelOpen', state.ui.penPanelOpen ? '1' : '0');
+          localStorage.setItem('penPanelView', state.ui.panelView);
+          localStorage.setItem('penActivePresetLabel', state.ui.activePresetLabel || '');
+        } catch (_) {}
+      }
+
+      function approxEqual(a, b) {
+        return Math.abs(Number(a) - Number(b)) < 0.001;
+      }
+
+      function buttonMatchesState(btn) {
+        if (!btn.dataset.tool || btn.dataset.tool !== state.tool) return false;
+        if (btn.dataset.label && state.ui.activePresetLabel) {
+          return btn.dataset.label === state.ui.activePresetLabel;
+        }
+        if (btn.dataset.size && !approxEqual(btn.dataset.size, state.size)) return false;
+        if (btn.dataset.alpha && !approxEqual(btn.dataset.alpha, state.alpha)) return false;
+        if (btn.dataset.glow && !approxEqual(btn.dataset.glow, state.glow)) return false;
+        if (btn.dataset.color && btn.dataset.color.toLowerCase() !== state.color.toLowerCase()) return false;
+        return true;
+      }
+
+      function updatePanelModeUi() {
+        const open = state.ui.penPanelOpen;
+        const brushesViewActive = open && state.ui.panelView === 'brushes';
+        const colorsViewActive = open && state.ui.panelView === 'colors';
+
+        toolsPanel.classList.toggle('is-collapsed', !open);
+        brushesPanel.classList.toggle('is-active', brushesViewActive);
+        colorsPanel.classList.toggle('is-active', colorsViewActive);
+
+        brushPanelViewBtn.classList.toggle('active', state.ui.panelView === 'brushes');
+        colorPanelViewBtn.classList.toggle('active', state.ui.panelView === 'colors');
+
+        penMenuToggle.classList.toggle('active', brushesViewActive);
+        quickPaletteBtn.classList.toggle('active', colorsViewActive);
+
+        panelTitle.textContent = state.ui.panelView === 'colors' ? 'Color' : 'Pinceles';
+      }
+
+      function setPanelView(view) {
+        state.ui.panelView = view === 'colors' ? 'colors' : 'brushes';
+        updatePanelModeUi();
+        persistUiState();
+        requestAnimationFrame(applyDockPosition);
+      }
+
+      function togglePenPanel(force) {
+        state.ui.penPanelOpen = typeof force === 'boolean' ? force : !state.ui.penPanelOpen;
+        updatePanelModeUi();
+        persistUiState();
+        requestAnimationFrame(applyDockPosition);
+      }
+
+      function applyDockPosition() {
+        if (!penDockRoot) return;
+        penDockRoot.dataset.side = state.ui.dockSide;
+        const side = state.ui.dockSide;
+        const margin = 16;
+        const topSafe = 84;
+        const rootRect = penDockRoot.getBoundingClientRect();
+        if (side === 'left' || side === 'right') {
+          const top = clamp(state.ui.dockOffset, topSafe, Math.max(topSafe, window.innerHeight - rootRect.height - 16));
+          penDockRoot.style.top = top + 'px';
+          penDockRoot.style.bottom = 'auto';
+          penDockRoot.style.left = side === 'left' ? margin + 'px' : 'auto';
+          penDockRoot.style.right = side === 'right' ? margin + 'px' : 'auto';
+        } else {
+          const topValue = side === 'top' ? topSafe : (window.innerHeight - rootRect.height - 16);
+          const left = clamp(state.ui.dockOffset, 16, Math.max(16, window.innerWidth - rootRect.width - 16));
+          penDockRoot.style.left = left + 'px';
+          penDockRoot.style.right = 'auto';
+          penDockRoot.style.top = topValue + 'px';
+          penDockRoot.style.bottom = 'auto';
+        }
+
+        dockPositionButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.side === side));
+        quickPaletteBtn.style.color = state.color;
+      }
+
+      function setDockSide(side, offset = state.ui.dockOffset) {
+        state.ui.dockSide = side;
+        state.ui.dockOffset = offset;
+        persistUiState();
+        applyDockPosition();
+      }
+
+      function nearestDockSide(rect) {
+        const distances = {
+          left: rect.left,
+          right: window.innerWidth - rect.right,
+          top: rect.top,
+          bottom: window.innerHeight - rect.bottom
+        };
+        return Object.entries(distances).sort((a, b) => a[1] - b[1])[0][0];
+      }
+
+      function beginDockDrag(event) {
+        if (isProjection) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const rect = penDockRoot.getBoundingClientRect();
+        dockDrag = {
+          offsetX: event.clientX - rect.left,
+          offsetY: event.clientY - rect.top
+        };
+        state.ui.isDockDragging = true;
+        penDockRoot.classList.add('is-dragging');
+      }
+
+      function moveDockDrag(event) {
+        if (!dockDrag) return;
+        const left = clamp(event.clientX - dockDrag.offsetX, 8, Math.max(8, window.innerWidth - penDockRoot.offsetWidth - 8));
+        const top = clamp(event.clientY - dockDrag.offsetY, 8, Math.max(8, window.innerHeight - penDockRoot.offsetHeight - 8));
+        penDockRoot.style.left = left + 'px';
+        penDockRoot.style.top = top + 'px';
+        penDockRoot.style.right = 'auto';
+        penDockRoot.style.bottom = 'auto';
+      }
+
+      function endDockDrag() {
+        if (!dockDrag) return;
+        const rect = penDockRoot.getBoundingClientRect();
+        const snappedSide = nearestDockSide(rect);
+        const offset = (snappedSide === 'left' || snappedSide === 'right') ? rect.top : rect.left;
+        dockDrag = null;
+        state.ui.isDockDragging = false;
+        penDockRoot.classList.remove('is-dragging');
+        setDockSide(snappedSide, offset);
+      }
+
+      function applyToolPreset(button) {
+        if (!button) return;
+        if (button.dataset.size) state.size = Number(button.dataset.size);
+        if (button.dataset.alpha) state.alpha = Number(button.dataset.alpha);
+        if (button.dataset.glow) state.glow = Number(button.dataset.glow);
+        if (button.dataset.color) state.color = button.dataset.color;
+        state.ui.activePresetLabel = button.dataset.label || button.title || '';
+      }
+
+
+      // SOLUCIÓN 3: Preservar el lienzo al hacer resize / fullscreen
       function resizeCanvases() {
+        // Hacemos un respaldo sincronizado de los píxeles actuales
+        const wOff = drawCanvas.width;
+        const hOff = drawCanvas.height;
+        
+        let offDraw, offFx;
+        if (wOff > 0 && hOff > 0) {
+          offDraw = document.createElement('canvas'); offDraw.width = wOff; offDraw.height = hOff;
+          offFx = document.createElement('canvas'); offFx.width = wOff; offFx.height = hOff;
+          offDraw.getContext('2d').drawImage(drawCanvas, 0, 0);
+          offFx.getContext('2d').drawImage(fxCanvas, 0, 0);
+        }
+
         const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
         const w = Math.floor(window.innerWidth * dpr);
         const h = Math.floor(window.innerHeight * dpr);
+        
         [baseCanvas, drawCanvas, fxCanvas].forEach(c => {
           c.width = w; c.height = h;
           c.style.width = window.innerWidth + 'px';
           c.style.height = window.innerHeight + 'px';
         });
+
+        // Restaurar los pixeles de forma instantánea
+        if (offDraw && offFx) {
+          drawCtx.drawImage(offDraw, 0, 0);
+          fxCtx.drawImage(offFx, 0, 0);
+        }
+
         renderAll();
+        requestAnimationFrame(applyDockPosition);
       }
 
       function syncUiFromState() {
@@ -524,10 +1229,21 @@
         sizeValue.textContent = state.size + ' px';
         alphaValue.textContent = Number(state.alpha).toFixed(2);
         glowValue.textContent = Number(state.glow).toFixed(2);
-        toolReadout.textContent = state.tool;
-        spotlightBtn.classList.toggle('active', state.spotlight);
-        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tool === state.tool));
+        toolReadout.textContent = state.ui.panelView === 'colors'
+          ? 'Paleta y muestras'
+          : (state.ui.activePresetLabel || state.tool);
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          btn.classList.toggle('active', buttonMatchesState(btn));
+        });
         roomReadout.textContent = 'Sala: ' + (state.roomId || '—');
+        quickPaletteBtn.style.color = state.color;
+
+        const pointerSize = Math.max(8, state.size * (state.tool === 'eraser' ? 1.25 : 1)); 
+        crosshair.style.width = pointerSize + 'px';
+        crosshair.style.height = pointerSize + 'px';
+
+        updatePanelModeUi();
+        applyDockPosition();
       }
 
       function setStatus(kind, text) {
@@ -597,9 +1313,12 @@
 
         conn.on('open', () => {
           setStatus('connected', 'Conectado');
-          // CORRECCIÓN 3: Enviar la imagen completa inicial solo cuando se conectan
           broadcastState(true);
-          sendFullFrame();
+          // Si la tablet (control) se vuelve a conectar tras un bloqueo, enviará 
+          // automáticamente su lienzo a la proyección para sincronizar ambos.
+          if (!isProjection) {
+             sendFullFrame(); 
+          }
         });
 
         conn.on('data', handleMessage);
@@ -623,8 +1342,24 @@
         peerOpen = false;
       }
 
+      // SOLUCIÓN 2: Controlar la reconexión durante el bloqueo de pantalla
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          // Si se desbloqueó la tablet y se perdió la conexión
+          if (!isProjection && (!conn || !conn.open)) {
+            initPeer();
+          }
+        } else {
+          // Si la pantalla se apagó/ocultó, detenemos el loop de reconexión
+          clearTimeout(reconnectTimer);
+        }
+      });
+
       function scheduleReconnect() {
         clearTimeout(reconnectTimer);
+        // Evitamos reconectar si la tablet está apagada o la pestaña oculta
+        if (document.visibilityState === 'hidden') return;
+        
         reconnectTimer = setTimeout(() => {
           if (!isProjection && state.roomId) initPeer();
         }, 1200);
@@ -634,7 +1369,6 @@
         if (conn && conn.open) conn.send(msg);
       }
 
-      // CORRECCIÓN 2: Modificamos broadcastState para que el envío de imagen pesada sea opcional
       function broadcastState(sendImage = false) {
         const rectNorm = state.baseImageRect
           ? {
@@ -653,7 +1387,6 @@
           size: state.size,
           alpha: state.alpha,
           glow: state.glow,
-          spotlight: state.spotlight,
           blackBg: state.blackBg,
           baseImageRectNorm: state.baseImageRectNorm,
         };
@@ -676,14 +1409,12 @@
         if (!msg || typeof msg !== 'object') return;
         switch (msg.type) {
           case 'state': {
-            // CORRECCIÓN 5: Solo actualizar la imagen base si en verdad llegó una nueva en el payload
             const oldImageData = state.baseImageData;
             Object.assign(state, msg.payload || {});
             
             if (msg.payload && 'baseImageData' in msg.payload && oldImageData !== state.baseImageData) {
               loadBaseImageFromState();
             } else if (msg.payload && msg.payload.baseImageRectNorm) {
-              // Si solo cambia la posición de la imagen, re-renderizamos la base
               renderBase();
             }
             
@@ -721,6 +1452,10 @@
               const py = yNorm != null ? yNorm * window.innerHeight : y;
               crosshair.style.left = px + 'px';
               crosshair.style.top = py + 'px';
+              // Actualizamos tamaño visual en proyección
+              const pSize = Math.max(8, state.size * (state.tool === 'eraser' ? 1.25 : 1));
+              crosshair.style.width = pSize + 'px';
+              crosshair.style.height = pSize + 'px';
             }
             break;
           }
@@ -742,7 +1477,6 @@
 
       function renderAll() {
         renderBase();
-        // Asegurarse de que el color de fondo general cambia
         if (state.blackBg) {
             document.body.style.background = '#000';
         } else {
@@ -882,7 +1616,6 @@
           }
         });
 
-        if (state.spotlight) drawSpotlight(point.x, point.y);
         send({
           type: 'pointerPreview',
           xNorm: point.x / drawCanvas.width,
@@ -938,7 +1671,6 @@
       function renderStrokeSegment(a, b, stroke) {
         const tool = stroke.tool;
         if (tool === 'spray') return spraySegment(a, b, stroke);
-        if (tool === 'ribbon') return ribbonSegment(a, b, stroke);
         if (tool === 'neon') return neonSegment(a, b, stroke);
         if (tool === 'eraser') return eraserSegment(a, b, stroke);
         return brushSegment(a, b, stroke);
@@ -977,33 +1709,6 @@
         drawCtx.restore();
       }
 
-      function ribbonSegment(a, b, stroke) {
-        fxCtx.save();
-        fxCtx.globalCompositeOperation = 'source-over';
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const len = Math.max(1, Math.hypot(dx, dy));
-        const nx = -dy / len;
-        const ny = dx / len;
-        const w = stroke.size * 0.9;
-        fxCtx.fillStyle = rgba(stroke.color, stroke.alpha * 0.32);
-        fxCtx.beginPath();
-        fxCtx.moveTo(a.x + nx * w, a.y + ny * w);
-        fxCtx.lineTo(a.x - nx * w, a.y - ny * w);
-        fxCtx.lineTo(b.x - nx * w * 0.55, b.y - ny * w * 0.55);
-        fxCtx.lineTo(b.x + nx * w * 0.55, b.y + ny * w * 0.55);
-        fxCtx.closePath();
-        fxCtx.fill();
-        fxCtx.strokeStyle = rgba(stroke.color, stroke.alpha);
-        fxCtx.lineWidth = Math.max(1, stroke.size * 0.24);
-        fxCtx.shadowColor = rgba(stroke.color, 0.9);
-        fxCtx.shadowBlur = stroke.size * 1.6 * Math.max(0.2, stroke.glow);
-        fxCtx.beginPath();
-        fxCtx.moveTo(a.x, a.y);
-        fxCtx.lineTo(b.x, b.y);
-        fxCtx.stroke();
-        fxCtx.restore();
-      }
 
       function spraySegment(a, b, stroke) {
         const dx = b.x - a.x;
@@ -1042,23 +1747,10 @@
         drawCtx.restore();
       }
 
-      function drawSpotlight(x, y) {
-        fxCtx.save();
-        fxCtx.globalCompositeOperation = 'lighter';
-        const g = fxCtx.createRadialGradient(x, y, 0, x, y, state.size * 8);
-        g.addColorStop(0, rgba(state.color, 0.28));
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        fxCtx.fillStyle = g;
-        fxCtx.beginPath();
-        fxCtx.arc(x, y, state.size * 8, 0, Math.PI * 2);
-        fxCtx.fill();
-        fxCtx.restore();
-      }
-
       function setTool(tool) {
         state.tool = tool;
         syncUiFromState();
-        broadcastState(); // No enviamos imagen
+        broadcastState(); 
       }
 
       function toggleToolbar() {
@@ -1092,7 +1784,6 @@
         initPeer();
       }
 
-      // CORRECCIÓN 4: Pasar true a broadcastState para enviar la imagen recién cargada
       async function loadLocalImage(file) {
         const reader = new FileReader();
         reader.onload = () => {
@@ -1112,26 +1803,56 @@
       });
       sizeInput.addEventListener('input', () => {
         state.size = Number(sizeInput.value);
+        state.ui.activePresetLabel = '';
         syncUiFromState();
         broadcastState();
       });
       alphaInput.addEventListener('input', () => {
         state.alpha = Number(alphaInput.value);
+        state.ui.activePresetLabel = '';
         syncUiFromState();
         broadcastState();
       });
       glowInput.addEventListener('input', () => {
         state.glow = Number(glowInput.value);
+        state.ui.activePresetLabel = '';
         syncUiFromState();
         broadcastState();
       });
 
-      document.querySelectorAll('.tool-btn').forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
-      spotlightBtn.addEventListener('click', () => {
-        state.spotlight = !state.spotlight;
-        syncUiFromState();
-        broadcastState();
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.addEventListener('click', () => {
+        applyToolPreset(btn);
+        setTool(btn.dataset.tool);
+        setPanelView('brushes');
+        togglePenPanel(true);
+      }));
+
+      penMenuToggle.addEventListener('click', () => {
+        if (!state.ui.penPanelOpen || state.ui.panelView !== 'brushes') {
+          setPanelView('brushes');
+          togglePenPanel(true);
+          return;
+        }
+        togglePenPanel(false);
       });
+
+      quickPaletteBtn.addEventListener('click', () => {
+        setPanelView('colors');
+        togglePenPanel(true);
+      });
+
+      brushPanelViewBtn.addEventListener('click', () => {
+        setPanelView('brushes');
+        togglePenPanel(true);
+      });
+
+      colorPanelViewBtn.addEventListener('click', () => {
+        setPanelView('colors');
+        togglePenPanel(true);
+      });
+
+      dockPositionButtons.forEach(btn => btn.addEventListener('click', () => setDockSide(btn.dataset.side, btn.dataset.side === 'left' || btn.dataset.side === 'right' ? penDockRoot.getBoundingClientRect().top : penDockRoot.getBoundingClientRect().left)));
+      dockHandle.addEventListener('pointerdown', beginDockDrag, { passive: false });
       connectBtn.addEventListener('click', connectRoom);
       roomInput.addEventListener('keydown', e => { if (e.key === 'Enter') connectRoom(); });
       copyControlLinkBtn.addEventListener('click', () => copyText(makeLink('control')));
@@ -1144,12 +1865,18 @@
       toggleHudBtn.addEventListener('click', () => hud.classList.toggle('hidden-in-projection'));
       projectionHudBtn.addEventListener('click', () => hud.classList.toggle('hidden-in-projection'));
       
-      // CORRECCIÓN 6: Usamos renderAll() para que el DOM cambie adecuadamente
       blackBgBtn.addEventListener('click', () => {
         state.blackBg = !state.blackBg;
         blackBgBtn.classList.toggle('active', state.blackBg);
         renderAll();
-        broadcastState(); // Se envía sin recargar la red con la imagen
+        broadcastState(); 
+      });
+
+      document.addEventListener('pointerdown', event => {
+        if (isProjection) return;
+        if (!state.ui.penPanelOpen) return;
+        if (penDockRoot.contains(event.target) || toolbar.contains(event.target) || fabBar.contains(event.target)) return;
+        togglePenPanel(false);
       });
 
       loadImageBtn.addEventListener('click', () => imageInput.click());
@@ -1183,13 +1910,28 @@
       undoBtn.addEventListener('click', undo);
       redoBtn.addEventListener('click', redo);
 
+      // SOLUCIÓN 1: Manejar eventos del botón del S-Pen (Eraser)
       function pointerDown(event) {
         if (isProjection) return;
         event.preventDefault();
+
+        // Detectar botón lateral del S-Pen (suele ser botón 2 o 5) o botones adicionales.
+        if (event.pointerType === 'pen' && (event.button === 2 || event.button === 5 || (event.buttons & 2) || (event.buttons & 32))) {
+          state.isStylusEraser = true;
+          state.previousTool = state.tool;
+          setTool('eraser');
+        }
+
         const p = getPointerPos(event);
         beginStroke(p);
       }
+      
       function pointerMove(event) {
+        if (state.ui.isDockDragging) {
+          moveDockDrag(event);
+          return;
+        }
+
         if (!isProjection) {
           const p = getPointerPos(event);
           send({
@@ -1201,16 +1943,29 @@
           if (state.pointerDown) extendStroke(p);
         }
       }
+      
       function pointerUp(event) {
+        if (state.ui.isDockDragging) {
+          endDockDrag();
+          return;
+        }
+
         if (isProjection) return;
         event.preventDefault();
         endStroke();
+
+        // Restaurar herramienta anterior si estábamos usando el botón del S-Pen
+        if (state.isStylusEraser) {
+          setTool(state.previousTool);
+          state.isStylusEraser = false;
+        }
       }
 
       drawCanvas.addEventListener('pointerdown', event => {
         drawCanvas.setPointerCapture?.(event.pointerId);
         pointerDown(event);
       }, { passive: false });
+      
       drawCanvas.addEventListener('pointermove', pointerMove, { passive: false });
       window.addEventListener('pointermove', pointerMove, { passive: false });
       window.addEventListener('pointerup', pointerUp, { passive: false });
@@ -1222,6 +1977,8 @@
         else document.exitFullscreen?.();
       }
 
+      setPanelView(state.ui.panelView);
+      togglePenPanel(state.ui.penPanelOpen);
       syncUiFromState();
       resizeCanvases();
       blackBgBtn.classList.toggle('active', state.blackBg);
