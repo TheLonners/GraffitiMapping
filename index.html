@@ -276,8 +276,43 @@
     }
 
     .projection-ui {
-      position: absolute; right: 16px; bottom: 16px; z-index: 12; display: flex; gap: 10px;
-      opacity: 0.92;
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      opacity: 0.96;
+      pointer-events: auto;
+    }
+
+    .projection-ui button {
+      min-width: 140px;
+      padding: 0 16px;
+      background: rgba(8,10,16,0.82);
+      backdrop-filter: blur(12px);
+    }
+
+    .projection-ui .btn-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .projection-ui .btn-label svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      pointer-events: none;
+    }
+
+    body.projection-mode .projection-ui {
+      display: flex !important;
+    }
+
+    body:not(.projection-mode) .projection-ui {
+      display: none !important;
     }
 
     .hidden-in-projection {
@@ -1089,7 +1124,7 @@
           </section>
         </div>
       </aside>
-
+    </div>
 
     <div class="footer-fab" id="fabBar">
       <button class="mini floating-lock-btn" id="floatLockBtn" title="Desbloquear menús flotantes" aria-label="Desbloquear menús flotantes">
@@ -1103,8 +1138,27 @@
     </div>
 
     <div class="projection-ui" id="projectionUi">
-      <button id="projectionFullscreenBtn">Fullscreen</button>
-      <button id="projectionHudBtn">HUD</button>
+      <button id="projectionFullscreenBtn" title="Pantalla completa" aria-label="Pantalla completa">
+        <span class="btn-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+            <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+            <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+          </svg>
+          <span>Fullscreen</span>
+        </span>
+      </button>
+      <button id="projectionHudBtn" title="Mostrar u ocultar HUD" aria-label="Mostrar u ocultar HUD">
+        <span class="btn-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 5h18"></path>
+            <path d="M7 12h10"></path>
+            <path d="M10 19h4"></path>
+          </svg>
+          <span>HUD</span>
+        </span>
+      </button>
     </div>
   </div>
 
